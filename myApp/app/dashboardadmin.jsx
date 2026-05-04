@@ -1,10 +1,53 @@
 import { FontAwesome5, Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import { useRouter } from "expo-router";
-import { Image, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { useState } from "react";
+import {
+  ActivityIndicator,
+  Alert,
+  Image,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+} from "react-native";
+
+import { clearAllAdminData, logoutAdmin } from "../constants/adminApi";
 
 export default function DashboardAdminScreen() {
   const router = useRouter();
+  const [clearing, setClearing] = useState(false);
+
+  const handleClearAll = () => {
+    Alert.alert(
+      "Bersihkan semua data",
+      "Semua data publik di Cloudflare akan dihapus.",
+      [
+        { text: "Batal", style: "cancel" },
+        {
+          text: "Hapus Semua",
+          style: "destructive",
+          onPress: async () => {
+            try {
+              setClearing(true);
+              const deleted = await clearAllAdminData();
+              Alert.alert(
+                "Data dibersihkan",
+                `${deleted.length} data berhasil dihapus.`
+              );
+            } catch (err) {
+              Alert.alert(
+                "Gagal membersihkan",
+                err.message || "Data belum berhasil dihapus."
+              );
+            } finally {
+              setClearing(false);
+            }
+          },
+        },
+      ]
+    );
+  };
 
   return (
     <LinearGradient
@@ -63,7 +106,10 @@ export default function DashboardAdminScreen() {
             <Text style={styles.cardText}>Doa Lingkungan</Text>
           </TouchableOpacity>
 
-          <TouchableOpacity style={styles.card}>
+          <TouchableOpacity
+            style={styles.card}
+            onPress={() => router.push("/adminwartajemaat")}
+          >
             <Ionicons name="person-circle-outline" size={55} color="black" />
             <Text style={styles.cardText}>Warta Jemaat</Text>
           </TouchableOpacity>
@@ -72,8 +118,21 @@ export default function DashboardAdminScreen() {
 
       {/* Bottom Navigation */}
       <View style={styles.bottomNav}>
-        <TouchableOpacity onPress={() => router.replace("/optionallogin")}>
+        <TouchableOpacity
+          onPress={() => {
+            logoutAdmin();
+            router.replace("/optionallogin");
+          }}
+        >
           <Ionicons name="log-out-outline" size={32} color="black" />
+        </TouchableOpacity>
+
+        <TouchableOpacity onPress={handleClearAll} disabled={clearing}>
+          {clearing ? (
+            <ActivityIndicator color="black" />
+          ) : (
+            <Ionicons name="trash-outline" size={32} color="black" />
+          )}
         </TouchableOpacity>
 
         <TouchableOpacity onPress={() => router.push("/settings")}>

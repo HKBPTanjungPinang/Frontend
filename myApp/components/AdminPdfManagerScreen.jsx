@@ -1,12 +1,11 @@
-import { Ionicons } from "@expo/vector-icons";
-import * as ImagePicker from "expo-image-picker";
+import { Ionicons, MaterialIcons } from "@expo/vector-icons";
+import * as DocumentPicker from "expo-document-picker";
 import { LinearGradient } from "expo-linear-gradient";
 import { useFocusEffect, useRouter } from "expo-router";
 import { useCallback, useState } from "react";
 import {
   ActivityIndicator,
   Alert,
-  Image,
   Modal,
   RefreshControl,
   ScrollView,
@@ -25,27 +24,25 @@ import {
   updateAdminItem,
 } from "../constants/adminApi";
 import {
-  buildApiUrl,
-  getItemDescription,
+  getItemDate,
   getItemId,
+  getItemTitle,
+  openFileView,
 } from "../constants/publicApi";
 
 const emptyForm = {
-  deskripsi: "",
-  gambar: null,
+  tanggal: "",
+  lokasi: "",
+  waktu: "",
+  file: null,
 };
 
-const getImageUrl = (item) => {
-  const value = item?.gambar_url || item?.image_url || item?.gambar || "";
-
-  if (!value) return "";
-  if (String(value).startsWith("http")) return value;
-  if (String(value).startsWith("uploads/")) return buildApiUrl(value);
-
-  return buildApiUrl(`/uploads/sejarah/${value}`);
-};
-
-export default function AdminSejarahScreen() {
+export default function AdminPdfManagerScreen({
+  category,
+  title,
+  showLocationFields = false,
+  gradient = ["#000080", "#FFFFFF"],
+}) {
   const router = useRouter();
   const [items, setItems] = useState([]);
   const [selected, setSelected] = useState(null);
@@ -60,7 +57,7 @@ export default function AdminSejarahScreen() {
   const loadData = useCallback(async () => {
     try {
       setError("");
-      const data = await getAdminList("sejarah");
+      const data = await getAdminList(category);
       setItems(data);
       setSelected((current) => {
         if (!current) return null;
@@ -68,12 +65,12 @@ export default function AdminSejarahScreen() {
         return data.find((item) => getItemId(item) === currentId) || null;
       });
     } catch (err) {
-      setError(err.message || "Data sejarah belum bisa dimuat");
+      setError(err.message || "Data admin belum bisa dimuat");
     } finally {
       setLoading(false);
       setRefreshing(false);
     }
-  }, []);
+  }, [category]);
 
   useFocusEffect(
     useCallback(() => {
@@ -96,24 +93,18 @@ export default function AdminSejarahScreen() {
 
     setMode("edit");
     setForm({
-      deskripsi: getItemDescription(selected),
-      gambar: null,
+      tanggal: selected.tanggal || "",
+      lokasi: selected.lokasi || "",
+      waktu: selected.waktu || "",
+      file: null,
     });
     setModalVisible(true);
   };
 
-  const pickImage = async () => {
-    const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
-
-    if (!permission.granted) {
-      Alert.alert("Izin diperlukan", "Izinkan akses galeri untuk memilih gambar.");
-      return;
-    }
-
-    const result = await ImagePicker.launchImageLibraryAsync({
-      allowsEditing: true,
-      quality: 0.85,
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+  const pickPdf = async () => {
+    const result = await DocumentPicker.getDocumentAsync({
+      type: "application/pdf",
+      copyToCacheDirectory: true,
     });
 
     if (result.canceled) return;
@@ -121,29 +112,34 @@ export default function AdminSejarahScreen() {
     const asset = result.assets?.[0];
     setForm((current) => ({
       ...current,
-      gambar: toUploadFile(asset, "sejarah.jpg", asset?.mimeType || "image/jpeg"),
+      file: toUploadFile(asset, "dokumen.pdf", "application/pdf"),
     }));
   };
 
   const buildFormData = () => {
     const data = new FormData();
-    data.append("deskripsi", form.deskripsi);
+    data.append("tanggal", form.tanggal);
 
-    if (form.gambar) {
-      data.append("gambar", form.gambar);
+    if (showLocationFields) {
+      data.append("lokasi", form.lokasi);
+      data.append("waktu", form.waktu);
+    }
+
+    if (form.file) {
+      data.append("file", form.file);
     }
 
     return data;
   };
 
   const submitForm = async () => {
-    if (!form.deskripsi) {
-      Alert.alert("Deskripsi kosong", "Isi deskripsi terlebih dahulu.");
+    if (!form.tanggal) {
+      Alert.alert("Tanggal kosong", "Isi tanggal terlebih dahulu.");
       return;
     }
 
-    if (mode === "create" && !form.gambar) {
-      Alert.alert("Gambar kosong", "Pilih gambar terlebih dahulu.");
+    if (mode === "create" && !form.file) {
+      Alert.alert("PDF kosong", "Pilih file PDF terlebih dahulu.");
       return;
     }
 
@@ -151,9 +147,9 @@ export default function AdminSejarahScreen() {
       setSaving(true);
 
       if (mode === "create") {
-        await createAdminItem("sejarah", buildFormData());
+        await createAdminItem(category, buildFormData());
       } else {
-        await updateAdminItem("sejarah", getItemId(selected), buildFormData());
+        await updateAdminItem(category, getItemId(selected), buildFormData());
       }
 
       setModalVisible(false);
@@ -171,14 +167,14 @@ export default function AdminSejarahScreen() {
       return;
     }
 
-    Alert.alert("Hapus data", "Data sejarah yang dipilih akan dihapus.", [
+    Alert.alert("Hapus data", "Data yang dipilih akan dihapus.", [
       { text: "Batal", style: "cancel" },
       {
         text: "Hapus",
         style: "destructive",
         onPress: async () => {
           try {
-            await deleteAdminItem("sejarah", getItemId(selected));
+            await deleteAdminItem(category, getItemId(selected));
             setSelected(null);
             await loadData();
           } catch (err) {
@@ -196,26 +192,25 @@ export default function AdminSejarahScreen() {
 
   return (
     <LinearGradient
-      colors={["#000080", "#FFFFFF"]}
+      colors={gradient}
       start={{ x: 0.5, y: 0 }}
       end={{ x: 0.5, y: 1 }}
       style={styles.container}
     >
-      <View style={styles.header}>
-        <TouchableOpacity
-          style={styles.backButton}
-          onPress={() => router.replace("/dashboardadmin")}
-        >
-          <Ionicons name="arrow-back" size={28} color="black" />
+      <View style={styles.headerRow}>
+        <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
+          <Ionicons name="arrow-back" size={22} color="black" />
         </TouchableOpacity>
 
-        <Text style={styles.headerTitle}>Sejarah HKBP Tanjung Pinang</Text>
+        <Text style={styles.headerTitle} numberOfLines={2}>
+          {title}
+        </Text>
       </View>
 
       {loading ? (
         <View style={styles.centerState}>
           <ActivityIndicator color="#FFFFFF" />
-          <Text style={styles.stateText}>Memuat sejarah...</Text>
+          <Text style={styles.stateText}>Memuat data...</Text>
         </View>
       ) : (
         <ScrollView
@@ -223,6 +218,7 @@ export default function AdminSejarahScreen() {
           refreshControl={
             <RefreshControl refreshing={refreshing} onRefresh={refreshData} />
           }
+          showsVerticalScrollIndicator={false}
         >
           {error ? (
             <View style={styles.messageBox}>
@@ -240,33 +236,36 @@ export default function AdminSejarahScreen() {
           ) : null}
 
           {items.map((item, index) => {
-            const imageUrl = getImageUrl(item);
+            const id = getItemId(item) || index;
             const isSelected = getItemId(selected) === getItemId(item);
 
             return (
               <TouchableOpacity
-                key={String(getItemId(item) || index)}
-                style={[styles.card, isSelected && styles.selectedCard]}
+                key={String(id)}
+                style={[styles.pdfCard, isSelected && styles.selectedCard]}
                 activeOpacity={0.85}
                 onPress={() => setSelected(item)}
+                onLongPress={() => openFileView(category, getItemId(item))}
               >
-                <Image
-                  source={
-                    imageUrl
-                      ? { uri: imageUrl }
-                      : require("../assets/images/gereja.jpeg")
-                  }
-                  style={styles.cardImage}
-                  resizeMode="cover"
-                />
-                <Text style={styles.paragraph}>{getItemDescription(item)}</Text>
+                <MaterialIcons name="picture-as-pdf" size={28} color="black" />
+
+                <View style={styles.cardTextGroup}>
+                  <Text style={styles.pdfText} numberOfLines={1}>
+                    {getItemTitle(item, `${title} ${index + 1}`)}
+                  </Text>
+                  <Text style={styles.metaText} numberOfLines={1}>
+                    {[getItemDate(item), item.lokasi, item.waktu]
+                      .filter(Boolean)
+                      .join(" - ")}
+                  </Text>
+                </View>
               </TouchableOpacity>
             );
           })}
         </ScrollView>
       )}
 
-      <View style={styles.buttonRow}>
+      <View style={styles.bottomButtonRow}>
         <TouchableOpacity style={styles.actionButton} onPress={deleteSelected}>
           <Text style={styles.actionButtonText}>Hapus</Text>
         </TouchableOpacity>
@@ -284,23 +283,46 @@ export default function AdminSejarahScreen() {
         <View style={styles.modalOverlay}>
           <View style={styles.modalCard}>
             <Text style={styles.modalTitle}>
-              {mode === "create" ? "Tambah Sejarah" : "Ubah Sejarah"}
+              {mode === "create" ? "Tambah Data" : "Ubah Data"}
             </Text>
 
-            <Text style={styles.inputLabel}>Deskripsi</Text>
+            <Text style={styles.inputLabel}>Tanggal</Text>
             <TextInput
-              style={[styles.input, styles.textArea]}
-              multiline
-              value={form.deskripsi}
-              onChangeText={(deskripsi) =>
-                setForm((current) => ({ ...current, deskripsi }))
+              style={styles.input}
+              placeholder="YYYY-MM-DD"
+              value={form.tanggal}
+              onChangeText={(tanggal) =>
+                setForm((current) => ({ ...current, tanggal }))
               }
             />
 
-            <TouchableOpacity style={styles.fileButton} onPress={pickImage}>
-              <Ionicons name="image-outline" size={22} color="#FFFFFF" />
+            {showLocationFields ? (
+              <>
+                <Text style={styles.inputLabel}>Lokasi</Text>
+                <TextInput
+                  style={styles.input}
+                  value={form.lokasi}
+                  onChangeText={(lokasi) =>
+                    setForm((current) => ({ ...current, lokasi }))
+                  }
+                />
+
+                <Text style={styles.inputLabel}>Waktu</Text>
+                <TextInput
+                  style={styles.input}
+                  placeholder="19:00"
+                  value={form.waktu}
+                  onChangeText={(waktu) =>
+                    setForm((current) => ({ ...current, waktu }))
+                  }
+                />
+              </>
+            ) : null}
+
+            <TouchableOpacity style={styles.fileButton} onPress={pickPdf}>
+              <MaterialIcons name="picture-as-pdf" size={22} color="#FFFFFF" />
               <Text style={styles.fileButtonText}>
-                {form.gambar?.name || "Pilih Gambar"}
+                {form.file?.name || "Pilih PDF"}
               </Text>
             </TouchableOpacity>
 
@@ -333,31 +355,32 @@ export default function AdminSejarahScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    paddingTop: 60,
+    paddingHorizontal: 20,
   },
 
-  header: {
+  headerRow: {
     flexDirection: "row",
     alignItems: "center",
-    marginTop: 18,
-    paddingHorizontal: 10,
-    marginBottom: 20,
+    marginBottom: 28,
   },
 
   backButton: {
+    width: 34,
+    height: 34,
     justifyContent: "center",
     alignItems: "center",
-    marginRight: 8,
+    marginRight: 10,
   },
 
   headerTitle: {
+    color: "#FFFFFF",
     fontSize: 20,
-    fontWeight: "bold",
-    color: "white",
-    flexShrink: 1,
+    fontWeight: "700",
+    flex: 1,
   },
 
   scrollContent: {
-    paddingHorizontal: 14,
     paddingBottom: 30,
   },
 
@@ -371,7 +394,7 @@ const styles = StyleSheet.create({
   stateText: {
     color: "#FFFFFF",
     fontSize: 14,
-    fontWeight: "700",
+    fontWeight: "600",
   },
 
   messageBox: {
@@ -403,10 +426,13 @@ const styles = StyleSheet.create({
     fontWeight: "700",
   },
 
-  card: {
+  pdfCard: {
+    flexDirection: "row",
+    alignItems: "center",
     backgroundColor: "#D9D9D9",
     borderRadius: 8,
-    padding: 14,
+    paddingVertical: 16,
+    paddingHorizontal: 16,
     marginBottom: 18,
     borderWidth: 2,
     borderColor: "transparent",
@@ -416,40 +442,40 @@ const styles = StyleSheet.create({
     borderColor: "#000080",
   },
 
-  cardImage: {
-    width: "100%",
-    height: 250,
-    borderRadius: 6,
-    marginBottom: 14,
+  cardTextGroup: {
+    flex: 1,
+    marginLeft: 12,
   },
 
-  paragraph: {
-    width: "100%",
-    fontSize: 14,
-    lineHeight: 24,
-    color: "#222",
-    textAlign: "justify",
+  pdfText: {
+    fontSize: 15,
+    fontWeight: "600",
+    color: "#000",
   },
 
-  buttonRow: {
+  metaText: {
+    marginTop: 4,
+    fontSize: 12,
+    color: "#333333",
+  },
+
+  bottomButtonRow: {
     flexDirection: "row",
     justifyContent: "space-between",
-    gap: 10,
-    marginHorizontal: 14,
     marginBottom: 24,
+    gap: 10,
   },
 
   actionButton: {
-    backgroundColor: "#000080",
+    backgroundColor: "#0000A8",
     flex: 1,
     height: 40,
     justifyContent: "center",
     alignItems: "center",
-    borderRadius: 2,
   },
 
   actionButtonText: {
-    color: "white",
+    color: "#FFFFFF",
     fontSize: 16,
     fontWeight: "500",
   },
@@ -491,11 +517,6 @@ const styles = StyleSheet.create({
     marginBottom: 14,
     fontSize: 15,
     color: "#000",
-  },
-
-  textArea: {
-    minHeight: 130,
-    textAlignVertical: "top",
   },
 
   fileButton: {

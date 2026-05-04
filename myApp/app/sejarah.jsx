@@ -1,16 +1,69 @@
+import { useRouter } from "expo-router";
 import { LinearGradient } from "expo-linear-gradient";
+import { useEffect, useState } from "react";
 import {
+  ActivityIndicator,
   Image,
+  RefreshControl,
   ScrollView,
   StyleSheet,
   Text,
   TouchableOpacity,
   View,
 } from "react-native";
-import { useRouter } from "expo-router";
+
+import {
+  buildApiUrl,
+  getItemDescription,
+  getItemTitle,
+  getPublicList,
+} from "../constants/publicApi";
+
+const fallbackParagraphs = [
+  "Awal mula jemaat HKBP di Tanjung Pinang tidak dapat dipastikan secara tepat, tetapi diketahui bahwa orang-orang Batak Kristen pada masa itu beribadah bersama umat Kristen dari berbagai suku lain seperti Ambon, Manado, Jawa, dan suku lainnya di gereja yang dikenal sebagai Vierde Kerk di Jalan Gereja No. 1 Tanjung Pinang.",
+  "Pada akhir tahun 1950, Pdt. M. Pakpahan dari HKBP Distrik Jawa-Kalimantan datang ke Tanjung Pinang dan disambut baik oleh jemaat asal HKBP. Dari proses inilah HKBP Tanjung Pinang resmi berdiri pada 7 Oktober 1951 dengan sekitar 20 kepala keluarga.",
+];
+
+const getImageUrl = (item) => {
+  const value = item?.gambar_url || item?.image_url || item?.gambar || "";
+
+  if (!value || typeof item === "string") return "";
+  if (String(value).startsWith("http")) return value;
+  if (String(value).startsWith("uploads/")) return buildApiUrl(value);
+
+  return buildApiUrl(`/uploads/sejarah/${value}`);
+};
 
 export default function SejarahScreen() {
   const router = useRouter();
+  const [items, setItems] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+  const [error, setError] = useState("");
+
+  const loadData = async () => {
+    try {
+      setError("");
+      const data = await getPublicList("sejarah");
+      setItems(data);
+    } catch (err) {
+      setError(err.message || "Data sejarah belum bisa dimuat");
+    } finally {
+      setLoading(false);
+      setRefreshing(false);
+    }
+  };
+
+  useEffect(() => {
+    loadData();
+  }, []);
+
+  const handleRefresh = () => {
+    setRefreshing(true);
+    loadData();
+  };
+
+  const contentItems = items.length > 0 ? items : fallbackParagraphs;
 
   return (
     <LinearGradient
@@ -19,13 +72,16 @@ export default function SejarahScreen() {
       end={{ x: 0.5, y: 1 }}
       style={styles.container}
     >
-      <ScrollView contentContainerStyle={styles.scrollContent}>
-        {/* Header */}
+      <ScrollView
+        contentContainerStyle={styles.scrollContent}
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={handleRefresh} />
+        }
+      >
         <View style={styles.header}>
           <Text style={styles.headerTitle}>Sejarah HKBP Tanjung Pinang</Text>
         </View>
 
-        {/* Content */}
         <View style={styles.content}>
           <View style={styles.imageContainer}>
             <Image
@@ -34,30 +90,47 @@ export default function SejarahScreen() {
               resizeMode="cover"
             />
 
-            <Text style={styles.paragraph}>
-              Awal mula jemaat HKBP di Tanjung Pinang tidak dapat dipastikan secara
-              tepat, tetapi diketahui bahwa orang-orang Batak Kristen pada masa itu
-              beribadah bersama umat Kristen dari berbagai suku lain seperti Ambon,
-              Manado, Jawa, dan suku lainnya di gereja yang dikenal sebagai Vierde
-              Kerk di Jalan Gereja No. 1 Tanjung Pinang. Gereja ini disebut-sebut
-              berkaitan dengan berbagai latar sejarah, dan pada sekitar tahun 1950
-              menjadi tempat berkumpulnya jemaat yang kemudian menjadi cikal bakal
-              berdirinya HKBP di Tanjung Pinang.
-            </Text>
+            {loading ? (
+              <View style={styles.loadingBox}>
+                <ActivityIndicator color="#000080" />
+                <Text style={styles.loadingText}>Memuat sejarah...</Text>
+              </View>
+            ) : null}
 
-            <Text style={styles.paragraph}>
-              Pada akhir tahun 1950, Pdt. M. Pakpahan dari HKBP Distrik
-              Jawa-Kalimantan datang ke Tanjung Pinang dan disambut baik oleh jemaat
-              asal HKBP. Namun, keinginan agar beliau memimpin Sakramen Baptisan dan
-              Perjamuan Kudus terhambat karena adanya larangan penggunaan bahasa
-              Batak dan syarat pemeriksaan teks khotbah oleh pihak Vierde Kerk.
-              Situasi ini mendorong jemaat asal HKBP membentuk panitia pendirian
-              gereja dengan pengurus pertama yang dipimpin K. Hasibuan dan P.
-              Nainggolan. Dari proses inilah HKBP Tanjung Pinang resmi berdiri pada
-              7 Oktober 1951 dengan sekitar 20 kepala keluarga, lalu diresmikan oleh
-              pimpinan pusat HKBP pada Januari 1952 sebagai bagian dari Ressort
-              Singapura dan Distrik Jawa-Kalimantan.
-            </Text>
+            {!loading && error ? (
+              <View style={styles.errorBox}>
+                <Text style={styles.errorText}>{error}</Text>
+                <TouchableOpacity style={styles.retryButton} onPress={loadData}>
+                  <Text style={styles.retryText}>Coba Lagi</Text>
+                </TouchableOpacity>
+              </View>
+            ) : null}
+
+            {!loading &&
+              !error &&
+              contentItems.map((item, index) => {
+                const imageUrl = getImageUrl(item);
+                const title =
+                  typeof item === "string" ? "" : getItemTitle(item, "");
+                const paragraph =
+                  typeof item === "string" ? item : getItemDescription(item);
+
+                return (
+                  <View key={String(item?.id || item?._id || index)}>
+                    {imageUrl ? (
+                      <Image
+                        source={{ uri: imageUrl }}
+                        style={styles.historyImage}
+                        resizeMode="cover"
+                      />
+                    ) : null}
+                    {title ? <Text style={styles.sectionTitle}>{title}</Text> : null}
+                    {paragraph ? (
+                      <Text style={styles.paragraph}>{paragraph}</Text>
+                    ) : null}
+                  </View>
+                );
+              })}
           </View>
 
           <TouchableOpacity
@@ -117,6 +190,60 @@ const styles = StyleSheet.create({
     height: 420,
     borderRadius: 6,
     marginBottom: 18,
+  },
+
+  loadingBox: {
+    alignItems: "center",
+    gap: 10,
+    paddingVertical: 24,
+  },
+
+  loadingText: {
+    color: "#000080",
+    fontSize: 14,
+    fontWeight: "700",
+  },
+
+  errorBox: {
+    width: "100%",
+    alignItems: "center",
+    paddingVertical: 14,
+  },
+
+  errorText: {
+    color: "#000",
+    fontSize: 14,
+    fontWeight: "600",
+    textAlign: "center",
+  },
+
+  retryButton: {
+    marginTop: 12,
+    backgroundColor: "#000080",
+    borderRadius: 6,
+    paddingHorizontal: 18,
+    paddingVertical: 10,
+  },
+
+  retryText: {
+    color: "#FFFFFF",
+    fontSize: 14,
+    fontWeight: "700",
+  },
+
+  sectionTitle: {
+    width: "100%",
+    fontSize: 16,
+    fontWeight: "700",
+    color: "#111",
+    marginBottom: 10,
+  },
+
+  historyImage: {
+    width: "100%",
+    height: 220,
+    borderRadius: 6,
+    marginBottom: 14,
   },
 
   paragraph: {

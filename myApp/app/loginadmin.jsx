@@ -1,6 +1,9 @@
 import { LinearGradient } from "expo-linear-gradient";
 import { useRouter } from "expo-router";
+import { useState } from "react";
 import {
+    ActivityIndicator,
+    Alert,
     Image,
     StyleSheet,
     Text,
@@ -9,8 +12,30 @@ import {
     View,
 } from "react-native";
 
+import { loginAdmin } from "../constants/adminApi";
+
 export default function LoginAdminScreen() {
   const router = useRouter();
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [loading, setLoading] = useState(false);
+
+  const handleLogin = async () => {
+    if (!email || !password) {
+      Alert.alert("Login belum lengkap", "Isi email dan password admin.");
+      return;
+    }
+
+    try {
+      setLoading(true);
+      await loginAdmin({ email, password });
+      router.replace("/dashboardadmin");
+    } catch (err) {
+      Alert.alert("Login gagal", err.message || "Coba lagi.");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <LinearGradient
@@ -40,12 +65,20 @@ export default function LoginAdminScreen() {
               placeholder=""
               keyboardType="email-address"
               autoCapitalize="none"
+              value={email}
+              onChangeText={setEmail}
             />
           </View>
 
           <View style={styles.inputGroup}>
             <Text style={styles.label}>Password:</Text>
-            <TextInput style={styles.input} placeholder="" secureTextEntry />
+            <TextInput
+              style={styles.input}
+              placeholder=""
+              secureTextEntry
+              value={password}
+              onChangeText={setPassword}
+            />
           </View>
 
           <TouchableOpacity style={styles.forgotContainer}>
@@ -54,9 +87,14 @@ export default function LoginAdminScreen() {
 
           <TouchableOpacity
             style={styles.loginButton}
-            onPress={() => router.push("/dashboardadmin")}
+            onPress={handleLogin}
+            disabled={loading}
           >
-            <Text style={styles.loginButtonText}>Login</Text>
+            {loading ? (
+              <ActivityIndicator color="#FFFFFF" />
+            ) : (
+              <Text style={styles.loginButtonText}>Login</Text>
+            )}
           </TouchableOpacity>
         </View>
       </View>
