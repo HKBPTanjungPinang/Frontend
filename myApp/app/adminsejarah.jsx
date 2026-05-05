@@ -119,9 +119,10 @@ export default function AdminSejarahScreen() {
     if (result.canceled) return;
 
     const asset = result.assets?.[0];
+    const gambar = await toUploadFile(asset, "sejarah.jpg", asset?.mimeType || "image/jpeg");
     setForm((current) => ({
       ...current,
-      gambar: toUploadFile(asset, "sejarah.jpg", asset?.mimeType || "image/jpeg"),
+      gambar,
     }));
   };
 

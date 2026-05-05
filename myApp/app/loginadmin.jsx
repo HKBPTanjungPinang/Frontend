@@ -16,19 +16,19 @@ import { loginAdmin } from "../constants/adminApi";
 
 export default function LoginAdminScreen() {
   const router = useRouter();
-  const [email, setEmail] = useState("");
+  const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
 
   const handleLogin = async () => {
-    if (!email || !password) {
-      Alert.alert("Login belum lengkap", "Isi email dan password admin.");
+    if (!username || !password) {
+      Alert.alert("Login belum lengkap", "Isi username dan password admin.");
       return;
     }
 
     try {
       setLoading(true);
-      await loginAdmin({ email, password });
+      await loginAdmin({ username, password });
       router.replace("/dashboardadmin");
     } catch (err) {
       Alert.alert("Login gagal", err.message || "Coba lagi.");
@@ -59,14 +59,13 @@ export default function LoginAdminScreen() {
       <View style={styles.cardWrapper}>
         <View style={styles.card}>
           <View style={styles.inputGroup}>
-            <Text style={styles.label}>Email:</Text>
+            <Text style={styles.label}>Username:</Text>
             <TextInput
               style={styles.input}
               placeholder=""
-              keyboardType="email-address"
               autoCapitalize="none"
-              value={email}
-              onChangeText={setEmail}
+              value={username}
+              onChangeText={setUsername}
             />
           </View>
 

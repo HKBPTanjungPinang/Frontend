@@ -46,13 +46,14 @@ const extractToken = (payload) =>
   payload?.data?.jwt ||
   "";
 
-export const loginAdmin = async ({ email, password }) => {
+export const loginAdmin = async ({ username, email, password }) => {
+  const loginUsername = username || email;
   const response = await fetch(buildApiUrl("/api/auth/login"), {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
     },
-    body: JSON.stringify({ email, password }),
+    body: JSON.stringify({ username: loginUsername, password }),
   });
   const payload = await response.json().catch(() => null);
 
@@ -88,10 +89,19 @@ const buildHeaders = (headers = {}, isFormData = false) => {
 
 const adminFetch = async (path, options = {}) => {
   const isFormData = options.body instanceof FormData;
-  const response = await fetch(buildApiUrl(path), {
-    ...options,
-    headers: buildHeaders(options.headers, isFormData),
-  });
+  let response;
+
+  try {
+    response = await fetch(buildApiUrl(path), {
+      ...options,
+      headers: buildHeaders(options.headers, isFormData),
+    });
+  } catch (err) {
+    throw new Error(
+      "Request gagal terkirim. Pastikan login admin masih aktif dan file upload valid."
+    );
+  }
+
   const payload = await response.json().catch(() => null);
 
   if (!response.ok) {
@@ -147,12 +157,31 @@ export const clearAllAdminData = async () => {
   return deleted;
 };
 
-export const toUploadFile = (asset, fallbackName, fallbackType) => {
+const buildFileName = (asset, fallbackName) =>
+  asset?.name || asset?.fileName || fallbackName;
+
+const buildFileType = (asset, fallbackType) =>
+  asset?.mimeType || asset?.type || fallbackType;
+
+export const toUploadFile = async (asset, fallbackName, fallbackType) => {
   if (!asset) return null;
+
+  if (asset.file) {
+    return asset.file;
+  }
+
+  const name = buildFileName(asset, fallbackName);
+  const type = buildFileType(asset, fallbackType);
+
+  if (typeof File !== "undefined" && asset.uri) {
+    const response = await fetch(asset.uri);
+    const blob = await response.blob();
+    return new File([blob], name, { type: blob.type || type });
+  }
 
   return {
     uri: asset.uri,
-    name: asset.name || asset.fileName || fallbackName,
-    type: asset.mimeType || fallbackType,
+    name,
+    type,
   };
 };

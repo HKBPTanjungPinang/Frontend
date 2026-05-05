@@ -110,9 +110,10 @@ export default function AdminPdfManagerScreen({
     if (result.canceled) return;
 
     const asset = result.assets?.[0];
+    const file = await toUploadFile(asset, "dokumen.pdf", "application/pdf");
     setForm((current) => ({
       ...current,
-      file: toUploadFile(asset, "dokumen.pdf", "application/pdf"),
+      file,
     }));
   };
 

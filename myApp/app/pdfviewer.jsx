@@ -3,21 +3,20 @@ import { LinearGradient } from "expo-linear-gradient";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import React, { useEffect, useState } from "react";
 import {
-    ActivityIndicator,
-    Platform,
-    StyleSheet,
-    Text,
-    TouchableOpacity,
-    View,
-    WebView,
+  ActivityIndicator,
+  Platform,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
 } from "react-native";
 
 import {
-    getFileViewUrl,
-    getItemDescription,
-    getItemTitle,
-    getPublicDetail,
-    openFileDownload
+  getFileViewUrl,
+  getItemTitle,
+  getPublicDetail,
+  openFileDownload,
+  openFileView,
 } from "../constants/publicApi";
 
 export default function PdfViewerScreen() {
@@ -31,7 +30,6 @@ export default function PdfViewerScreen() {
   const [error, setError] = useState("");
 
   const title = detail ? getItemTitle(detail, fallbackTitle) : fallbackTitle;
-  const description = detail ? getItemDescription(detail) : "";
 
   useEffect(() => {
     let mounted = true;
@@ -130,22 +128,15 @@ export default function PdfViewerScreen() {
               : null}
           </View>
         ) : (
-          <WebView
-            source={{ uri: viewUrl }}
-            style={styles.webView}
-            startInLoadingState={true}
-            renderLoading={() => (
-              <View style={styles.centerState}>
-                <ActivityIndicator color="#000080" size="large" />
-                <Text style={styles.stateText}>Memuat PDF...</Text>
-              </View>
-            )}
-            onError={() => {
-              setError("PDF tidak dapat dimuat. Coba download untuk melihat.");
-            }}
-            javaScriptEnabled={true}
-            domStorageEnabled={true}
-          />
+          <View style={styles.messageBox}>
+            <MaterialIcons name="picture-as-pdf" size={46} color="#000080" />
+            <TouchableOpacity
+              style={styles.primaryButton}
+              onPress={() => openFileView(category, id)}
+            >
+              <Text style={styles.primaryButtonText}>Lihat PDF</Text>
+            </TouchableOpacity>
+          </View>
         )}
       </View>
     </LinearGradient>
@@ -231,14 +222,6 @@ const styles = StyleSheet.create({
     textAlign: "center",
   },
 
-  description: {
-    color: "#222",
-    fontSize: 14,
-    lineHeight: 22,
-    marginTop: 14,
-    textAlign: "center",
-  },
-
   primaryButton: {
     marginTop: 18,
     backgroundColor: "#000080",
@@ -264,10 +247,5 @@ const styles = StyleSheet.create({
     width: "100%",
     height: "100%",
     borderWidth: 0,
-  },
-
-  webView: {
-    flex: 1,
-    backgroundColor: "#FFFFFF",
   },
 });
