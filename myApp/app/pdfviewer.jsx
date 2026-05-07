@@ -10,13 +10,13 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+import { WebView } from "react-native-webview";
 
 import {
   getFileViewUrl,
   getItemTitle,
   getPublicDetail,
   openFileDownload,
-  openFileView,
 } from "../constants/publicApi";
 
 export default function PdfViewerScreen() {
@@ -71,6 +71,12 @@ export default function PdfViewerScreen() {
   };
 
   const viewUrl = category && id ? getFileViewUrl(category, id) : "";
+  const nativePdfUrl =
+    Platform.OS === "android" && viewUrl
+      ? `https://docs.google.com/gview?embedded=true&url=${encodeURIComponent(
+          viewUrl
+        )}`
+      : viewUrl;
 
   return (
     <LinearGradient
@@ -128,15 +134,26 @@ export default function PdfViewerScreen() {
               : null}
           </View>
         ) : (
-          <View style={styles.messageBox}>
-            <MaterialIcons name="picture-as-pdf" size={46} color="#000080" />
-            <TouchableOpacity
-              style={styles.primaryButton}
-              onPress={() => openFileView(category, id)}
-            >
-              <Text style={styles.primaryButtonText}>Lihat PDF</Text>
-            </TouchableOpacity>
-          </View>
+          <WebView
+            source={{ uri: nativePdfUrl }}
+            style={styles.nativeViewer}
+            startInLoadingState
+            javaScriptEnabled
+            domStorageEnabled
+            originWhitelist={["*"]}
+            renderLoading={() => (
+              <View style={styles.centerState}>
+                <ActivityIndicator color="#000080" />
+                <Text style={styles.stateText}>Memuat PDF...</Text>
+              </View>
+            )}
+            onError={() => {
+              setError("PDF belum bisa dimuat di aplikasi. Coba download file.");
+            }}
+            onHttpError={() => {
+              setError("PDF belum bisa dimuat di aplikasi. Coba download file.");
+            }}
+          />
         )}
       </View>
     </LinearGradient>
@@ -247,5 +264,11 @@ const styles = StyleSheet.create({
     width: "100%",
     height: "100%",
     borderWidth: 0,
+  },
+
+  nativeViewer: {
+    flex: 1,
+    backgroundColor: "#FFFFFF",
+    borderRadius: 8,
   },
 });
