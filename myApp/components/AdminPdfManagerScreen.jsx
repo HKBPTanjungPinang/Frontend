@@ -4,30 +4,30 @@ import { LinearGradient } from "expo-linear-gradient";
 import { useFocusEffect, useRouter } from "expo-router";
 import { useCallback, useState } from "react";
 import {
-  ActivityIndicator,
-  Alert,
-  Modal,
-  RefreshControl,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  View,
+    ActivityIndicator,
+    Alert,
+    Modal,
+    RefreshControl,
+    ScrollView,
+    StyleSheet,
+    Text,
+    TextInput,
+    TouchableOpacity,
+    View,
 } from "react-native";
 
 import {
-  createAdminItem,
-  deleteAdminItem,
-  getAdminList,
-  toUploadFile,
-  updateAdminItem,
+    createAdminItem,
+    deleteAdminItem,
+    getAdminList,
+    toUploadFile,
+    updateAdminItem,
 } from "../constants/adminApi";
 import {
-  getItemDate,
-  getItemId,
-  getItemTitle,
-  openFileView,
+    getItemDate,
+    getItemId,
+    getItemTitle,
+    openFileView,
 } from "../constants/publicApi";
 
 const emptyForm = {
@@ -126,8 +126,8 @@ export default function AdminPdfManagerScreen({
       data.append("waktu", form.waktu);
     }
 
-    if (form.file) {
-      data.append("file", form.file);
+    if (form.file?.file) {
+      data.append("file", form.file.file, form.file.name);
     }
 
     return data;

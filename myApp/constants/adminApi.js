@@ -96,7 +96,7 @@ const adminFetch = async (path, options = {}) => {
       ...options,
       headers: buildHeaders(options.headers, isFormData),
     });
-  } catch (err) {
+  } catch (_err) {
     throw new Error(
       "Request gagal terkirim. Pastikan login admin masih aktif dan file upload valid."
     );
@@ -166,22 +166,33 @@ const buildFileType = (asset, fallbackType) =>
 export const toUploadFile = async (asset, fallbackName, fallbackType) => {
   if (!asset) return null;
 
-  if (asset.file) {
-    return asset.file;
-  }
-
   const name = buildFileName(asset, fallbackName);
   const type = buildFileType(asset, fallbackType);
 
-  if (typeof File !== "undefined" && asset.uri) {
-    const response = await fetch(asset.uri);
-    const blob = await response.blob();
-    return new File([blob], name, { type: blob.type || type });
+  // Use File object directly if available (web upload)
+  if (asset.file) {
+    return {
+      file: asset.file,
+      name,
+      type: type || asset.file.type,
+    };
   }
 
-  return {
-    uri: asset.uri,
-    name,
-    type,
-  };
+  // Fetch blob from URI if available (mobile or blob URI)
+  if (asset.uri) {
+    try {
+      const response = await fetch(asset.uri);
+      const blob = await response.blob();
+      return {
+        file: blob,
+        name,
+        type: blob.type || type,
+      };
+    } catch (error) {
+      console.error("Error fetching file from URI:", error);
+      throw new Error(`Gagal membaca file: ${error.message}`);
+    }
+  }
+
+  throw new Error("File asset tidak valid - tidak memiliki file atau uri");
 };

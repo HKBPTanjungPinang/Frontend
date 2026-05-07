@@ -1,5 +1,5 @@
-import { useRouter } from "expo-router";
 import { LinearGradient } from "expo-linear-gradient";
+import { useRouter } from "expo-router";
 import { useEffect, useState } from "react";
 import {
   ActivityIndicator,
@@ -84,12 +84,6 @@ export default function SejarahScreen() {
 
         <View style={styles.content}>
           <View style={styles.imageContainer}>
-            <Image
-              source={require("../assets/images/gereja.jpeg")}
-              style={styles.churchImage}
-              resizeMode="cover"
-            />
-
             {loading ? (
               <View style={styles.loadingBox}>
                 <ActivityIndicator color="#000080" />
@@ -116,11 +110,14 @@ export default function SejarahScreen() {
                   typeof item === "string" ? item : getItemDescription(item);
 
                 return (
-                  <View key={String(item?.id || item?._id || index)}>
+                  <View
+                    key={String(item?.id || item?._id || index)}
+                    style={styles.historyBlock}
+                  >
                     {imageUrl ? (
                       <Image
                         source={{ uri: imageUrl }}
-                        style={styles.historyImage}
+                        style={index === 0 ? styles.churchImage : styles.historyImage}
                         resizeMode="cover"
                       />
                     ) : null}
@@ -243,11 +240,20 @@ const styles = StyleSheet.create({
     width: "100%",
     height: 220,
     borderRadius: 6,
-    marginBottom: 14,
+    marginBottom: 8,
+  },
+
+  historyBlock: {
+    width: "100%",
+    maxWidth: "100%",
+    alignSelf: "stretch",
   },
 
   paragraph: {
     width: "100%",
+    maxWidth: "100%",
+    flexShrink: 1,
+    flexWrap: "wrap",
     fontSize: 14,
     lineHeight: 24,
     color: "#222",

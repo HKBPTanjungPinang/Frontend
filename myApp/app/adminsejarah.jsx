@@ -4,30 +4,30 @@ import { LinearGradient } from "expo-linear-gradient";
 import { useFocusEffect, useRouter } from "expo-router";
 import { useCallback, useState } from "react";
 import {
-  ActivityIndicator,
-  Alert,
-  Image,
-  Modal,
-  RefreshControl,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  View,
+    ActivityIndicator,
+    Alert,
+    Image,
+    Modal,
+    RefreshControl,
+    ScrollView,
+    StyleSheet,
+    Text,
+    TextInput,
+    TouchableOpacity,
+    View,
 } from "react-native";
 
 import {
-  createAdminItem,
-  deleteAdminItem,
-  getAdminList,
-  toUploadFile,
-  updateAdminItem,
+    createAdminItem,
+    deleteAdminItem,
+    getAdminList,
+    toUploadFile,
+    updateAdminItem,
 } from "../constants/adminApi";
 import {
-  buildApiUrl,
-  getItemDescription,
-  getItemId,
+    buildApiUrl,
+    getItemDescription,
+    getItemId,
 } from "../constants/publicApi";
 
 const emptyForm = {
@@ -63,9 +63,10 @@ export default function AdminSejarahScreen() {
       const data = await getAdminList("sejarah");
       setItems(data);
       setSelected((current) => {
-        if (!current) return null;
+        if (data.length === 0) return null;
+        if (!current) return data[0];
         const currentId = getItemId(current);
-        return data.find((item) => getItemId(item) === currentId) || null;
+        return data.find((item) => getItemId(item) === currentId) || data[0];
       });
     } catch (err) {
       setError(err.message || "Data sejarah belum bisa dimuat");
@@ -83,6 +84,14 @@ export default function AdminSejarahScreen() {
   );
 
   const openCreate = () => {
+    if (items.length > 0) {
+      Alert.alert(
+        "Sejarah sudah ada",
+        "Data sejarah hanya boleh satu. Gunakan tombol Ubah untuk memperbarui data."
+      );
+      return;
+    }
+
     setMode("create");
     setForm(emptyForm);
     setModalVisible(true);
@@ -130,8 +139,8 @@ export default function AdminSejarahScreen() {
     const data = new FormData();
     data.append("deskripsi", form.deskripsi);
 
-    if (form.gambar) {
-      data.append("gambar", form.gambar);
+    if (form.gambar?.file) {
+      data.append("gambar", form.gambar.file, form.gambar.name);
     }
 
     return data;
@@ -240,7 +249,7 @@ export default function AdminSejarahScreen() {
             </View>
           ) : null}
 
-          {items.map((item, index) => {
+          {items.slice(0, 1).map((item, index) => {
             const imageUrl = getImageUrl(item);
             const isSelected = getItemId(selected) === getItemId(item);
 
@@ -264,6 +273,15 @@ export default function AdminSejarahScreen() {
               </TouchableOpacity>
             );
           })}
+
+          {items.length > 1 ? (
+            <View style={styles.messageBox}>
+              <Text style={styles.messageText}>
+                Ada {items.length - 1} data sejarah tambahan di database. Layar
+                ini hanya mengelola satu data utama.
+              </Text>
+            </View>
+          ) : null}
         </ScrollView>
       )}
 
