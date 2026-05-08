@@ -62,6 +62,13 @@ export default function HomeScreen() {
             <FontAwesome5 name="cross" size={55} color="black" />
             <Text style={styles.cardText}>Doa Lingkungan</Text>
           </TouchableOpacity>
+
+          <View
+            style={styles.card}
+          >
+            <Ionicons name="person-circle-outline" size={55} color="#CCCCCC" />
+            <Text style={[styles.cardText, { color: "#CCCCCC" }]}>Warta Jemaat</Text>
+          </View>
         </View>
       </View>
 

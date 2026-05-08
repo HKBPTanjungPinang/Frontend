@@ -53,6 +53,9 @@ export default function AdminPdfManagerScreen({
   const [modalVisible, setModalVisible] = useState(false);
   const [mode, setMode] = useState("create");
   const [form, setForm] = useState(emptyForm);
+  const [searchDate, setSearchDate] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
 
   const loadData = useCallback(async () => {
     try {
@@ -191,6 +194,21 @@ export default function AdminPdfManagerScreen({
     loadData();
   };
 
+  // Filter items by search date
+  const filteredItems = searchDate
+    ? items.filter((item) => {
+        const itemDate = getItemDate(item) || "";
+        return itemDate.includes(searchDate);
+      })
+    : items;
+
+  // Pagination
+  const totalPages = Math.ceil(filteredItems.length / itemsPerPage);
+  const paginatedItems = filteredItems.slice(
+    (currentPage - 1) * itemsPerPage,
+    currentPage * itemsPerPage
+  );
+
   return (
     <LinearGradient
       colors={gradient}
@@ -207,6 +225,29 @@ export default function AdminPdfManagerScreen({
           {title}
         </Text>
       </View>
+
+      {!loading && !error && (
+        <View style={styles.searchContainer}>
+          <TextInput
+            style={styles.searchInput}
+            placeholder="Cari tanggal (YYYY-MM-DD)"
+            placeholderTextColor="#999"
+            value={searchDate}
+            onChangeText={setSearchDate}
+          />
+          {searchDate ? (
+            <TouchableOpacity
+              style={styles.clearButton}
+              onPress={() => {
+                setSearchDate("");
+                setCurrentPage(1);
+              }}
+            >
+              <Ionicons name="close-circle" size={20} color="#666" />
+            </TouchableOpacity>
+          ) : null}
+        </View>
+      )}
 
       {loading ? (
         <View style={styles.centerState}>
@@ -230,13 +271,15 @@ export default function AdminPdfManagerScreen({
             </View>
           ) : null}
 
-          {!error && items.length === 0 ? (
+          {!error && filteredItems.length === 0 ? (
             <View style={styles.messageBox}>
-              <Text style={styles.messageText}>Belum ada data.</Text>
+              <Text style={styles.messageText}>
+                {searchDate ? "Tidak ada data yang cocok." : "Belum ada data."}
+              </Text>
             </View>
           ) : null}
 
-          {items.map((item, index) => {
+          {paginatedItems.map((item, index) => {
             const id = getItemId(item) || index;
             const isSelected = getItemId(selected) === getItemId(item);
 
@@ -263,6 +306,36 @@ export default function AdminPdfManagerScreen({
               </TouchableOpacity>
             );
           })}
+
+          {totalPages > 1 && (
+            <View style={styles.paginationContainer}>
+              <TouchableOpacity
+                style={[
+                  styles.pageButton,
+                  currentPage === 1 && styles.pageButtonDisabled,
+                ]}
+                onPress={() => setCurrentPage(currentPage - 1)}
+                disabled={currentPage === 1}
+              >
+                <Text style={styles.pageButtonText}>Sebelumnya</Text>
+              </TouchableOpacity>
+
+              <Text style={styles.pageInfo}>
+                {currentPage} / {totalPages}
+              </Text>
+
+              <TouchableOpacity
+                style={[
+                  styles.pageButton,
+                  currentPage === totalPages && styles.pageButtonDisabled,
+                ]}
+                onPress={() => setCurrentPage(currentPage + 1)}
+                disabled={currentPage === totalPages}
+              >
+                <Text style={styles.pageButtonText}>Berikutnya</Text>
+              </TouchableOpacity>
+            </View>
+          )}
         </ScrollView>
       )}
 
@@ -560,4 +633,64 @@ const styles = StyleSheet.create({
     fontSize: 15,
     fontWeight: "700",
   },
+
+  searchContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#FFFFFF",
+    borderRadius: 8,
+    marginBottom: 18,
+    paddingRight: 12,
+    borderWidth: 1,
+    borderColor: "#CCCCCC",
+  },
+
+  searchInput: {
+    flex: 1,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    fontSize: 14,
+    color: "#000",
+  },
+
+  clearButton: {
+    padding: 8,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+
+  paginationContainer: {
+    flexDirection: "row",
+    justifyContent: "center",
+    alignItems: "center",
+    gap: 12,
+    marginTop: 20,
+    marginBottom: 20,
+  },
+
+  pageButton: {
+    backgroundColor: "#000080",
+    borderRadius: 6,
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+  },
+
+  pageButtonDisabled: {
+    backgroundColor: "#CCCCCC",
+  },
+
+  pageButtonText: {
+    color: "#FFFFFF",
+    fontSize: 13,
+    fontWeight: "600",
+  },
+
+  pageInfo: {
+    color: "#FFFFFF",
+    fontSize: 14,
+    fontWeight: "600",
+    minWidth: 60,
+    textAlign: "center",
+  },
 });
+

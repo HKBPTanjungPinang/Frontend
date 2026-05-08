@@ -1,17 +1,49 @@
 import {
-  buildApiUrl,
-  getItemId,
-  getPublicEndpoint,
-  normalizeItem,
-  normalizeList,
-  PUBLIC_ENDPOINTS,
+    buildApiUrl,
+    getItemId,
+    getPublicEndpoint,
+    normalizeItem,
+    normalizeList,
+    PUBLIC_ENDPOINTS,
 } from "./publicApi";
 
 let sessionToken = "";
+let asyncStorageAvailable = false;
+let AsyncStorage = null;
+
+// Try to import AsyncStorage for mobile support
+try {
+  AsyncStorage = require("@react-native-async-storage/async-storage").default;
+  asyncStorageAvailable = true;
+} catch (_err) {
+  asyncStorageAvailable = false;
+}
 
 const getStoredToken = () => {
   if (sessionToken) return sessionToken;
 
+  // Try localStorage first (web)
+  if (typeof localStorage !== "undefined") {
+    sessionToken = localStorage.getItem("adminToken") || "";
+  }
+
+  return sessionToken;
+};
+
+const getStoredTokenAsync = async () => {
+  if (sessionToken) return sessionToken;
+
+  // Try AsyncStorage first (mobile)
+  if (asyncStorageAvailable && AsyncStorage) {
+    try {
+      sessionToken = (await AsyncStorage.getItem("adminToken")) || "";
+      return sessionToken;
+    } catch (_err) {
+      // Fall back to localStorage
+    }
+  }
+
+  // Fall back to localStorage (web)
   if (typeof localStorage !== "undefined") {
     sessionToken = localStorage.getItem("adminToken") || "";
   }
@@ -22,6 +54,16 @@ const getStoredToken = () => {
 export const setAdminToken = (token) => {
   sessionToken = token || "";
 
+  // Try AsyncStorage first (mobile)
+  if (asyncStorageAvailable && AsyncStorage) {
+    if (sessionToken) {
+      AsyncStorage.setItem("adminToken", sessionToken).catch(() => {});
+    } else {
+      AsyncStorage.removeItem("adminToken").catch(() => {});
+    }
+  }
+
+  // Also try localStorage (web)
   if (typeof localStorage !== "undefined") {
     if (sessionToken) {
       localStorage.setItem("adminToken", sessionToken);
@@ -32,6 +74,7 @@ export const setAdminToken = (token) => {
 };
 
 export const getAdminToken = getStoredToken;
+export const getAdminTokenAsync = getStoredTokenAsync;
 
 export const logoutAdmin = () => setAdminToken("");
 
@@ -71,8 +114,8 @@ export const loginAdmin = async ({ username, email, password }) => {
   return payload;
 };
 
-const buildHeaders = (headers = {}, isFormData = false) => {
-  const token = getStoredToken();
+const buildHeaders = async (headers = {}, isFormData = false) => {
+  const token = await getStoredTokenAsync();
 
   const defaultHeaders = {
     ...headers,
@@ -92,9 +135,10 @@ const adminFetch = async (path, options = {}) => {
   let response;
 
   try {
+    const headers = await buildHeaders(options.headers, isFormData);
     response = await fetch(buildApiUrl(path), {
       ...options,
-      headers: buildHeaders(options.headers, isFormData),
+      headers,
     });
   } catch (_err) {
     throw new Error(
@@ -183,10 +227,16 @@ export const toUploadFile = async (asset, fallbackName, fallbackType) => {
     try {
       const response = await fetch(asset.uri);
       const blob = await response.blob();
+      
+      // For mobile (React Native), just return the blob directly
+      // FormData.append will handle it properly
+      const mimeType = blob.type || type || "application/octet-stream";
+      
+      // Return blob with metadata for FormData
       return {
         file: blob,
         name,
-        type: blob.type || type,
+        type: mimeType,
       };
     } catch (error) {
       console.error("Error fetching file from URI:", error);

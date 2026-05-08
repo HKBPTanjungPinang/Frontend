@@ -8,16 +8,7 @@ import {
     ScrollView,
     StyleSheet,
     Text,
-    TouchableOpacity,
-    View,
-} from "react-native";
-
-import {
-    getItemDate,
-    getItemId,
-    getItemTitle,
-    getPublicList,
-} from "../constants/publicApi";
+  TextInput,
 
 export default function PublicDetailListScreen({
   category,
@@ -29,6 +20,9 @@ export default function PublicDetailListScreen({
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState("");
+  const [searchDate, setSearchDate] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
 
   const loadData = useCallback(async () => {
     try {
@@ -73,6 +67,21 @@ export default function PublicDetailListScreen({
     });
   };
 
+  // Filter items by search date
+  const filteredItems = searchDate
+    ? items.filter((item) => {
+        const itemDate = getItemDate(item) || "";
+        return itemDate.includes(searchDate);
+      })
+    : items;
+
+  // Pagination
+  const totalPages = Math.ceil(filteredItems.length / itemsPerPage);
+  const paginatedItems = filteredItems.slice(
+    (currentPage - 1) * itemsPerPage,
+    currentPage * itemsPerPage
+  );
+
   return (
     <LinearGradient
       colors={gradient}
@@ -89,6 +98,29 @@ export default function PublicDetailListScreen({
           {title}
         </Text>
       </View>
+
+      {!loading && !error && (
+        <View style={styles.searchContainer}>
+          <TextInput
+            style={styles.searchInput}
+            placeholder="Cari tanggal (YYYY-MM-DD)"
+            placeholderTextColor="#999"
+            value={searchDate}
+            onChangeText={setSearchDate}
+          />
+          {searchDate ? (
+            <TouchableOpacity
+              style={styles.clearButton}
+              onPress={() => {
+                setSearchDate("");
+                setCurrentPage(1);
+              }}
+            >
+              <Ionicons name="close-circle" size={20} color="#666" />
+            </TouchableOpacity>
+          ) : null}
+        </View>
+      )}
 
       {loading ? (
         <View style={styles.centerState}>
@@ -112,13 +144,15 @@ export default function PublicDetailListScreen({
             </View>
           ) : null}
 
-          {!error && items.length === 0 ? (
+          {!error && filteredItems.length === 0 ? (
             <View style={styles.messageBox}>
-              <Text style={styles.messageText}>Belum ada data.</Text>
+              <Text style={styles.messageText}>
+                {searchDate ? "Tidak ada data yang cocok." : "Belum ada data."}
+              </Text>
             </View>
           ) : null}
 
-          {items.map((item, index) => {
+          {paginatedItems.map((item, index) => {
             const id = getItemId(item) || index;
             const tanggal = getItemDate(item) || "-";
             const lokasi = item.lokasi || "-";
@@ -158,6 +192,36 @@ export default function PublicDetailListScreen({
               </TouchableOpacity>
             );
           })}
+
+          {totalPages > 1 && (
+            <View style={styles.paginationContainer}>
+              <TouchableOpacity
+                style={[
+                  styles.pageButton,
+                  currentPage === 1 && styles.pageButtonDisabled,
+                ]}
+                onPress={() => setCurrentPage(currentPage - 1)}
+                disabled={currentPage === 1}
+              >
+                <Text style={styles.pageButtonText}>Sebelumnya</Text>
+              </TouchableOpacity>
+
+              <Text style={styles.pageInfo}>
+                {currentPage} / {totalPages}
+              </Text>
+
+              <TouchableOpacity
+                style={[
+                  styles.pageButton,
+                  currentPage === totalPages && styles.pageButtonDisabled,
+                ]}
+                onPress={() => setCurrentPage(currentPage + 1)}
+                disabled={currentPage === totalPages}
+              >
+                <Text style={styles.pageButtonText}>Berikutnya</Text>
+              </TouchableOpacity>
+            </View>
+          )}
         </ScrollView>
       )}
     </LinearGradient>
@@ -280,5 +344,67 @@ const styles = StyleSheet.create({
   actionIcon: {
     justifyContent: "center",
     alignItems: "center",
+  },
+
+  searchContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#FFFFFF",
+    borderRadius: 8,
+    marginBottom: 18,
+    paddingRight: 12,
+    borderWidth: 1,
+    borderColor: "#CCCCCC",
+  },
+
+  searchInput: {
+    flex: 1,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    fontSize: 14,
+    color: "#000",
+  },
+
+  clearButton: {
+    padding: 8,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+
+  paginationContainer: {
+    flexDirection: "row",
+    justifyContent: "center",
+    alignItems: "center",
+    gap: 12,
+    marginTop: 20,
+    marginBottom: 20,
+  },
+
+  pageButton: {
+    backgroundColor: "#FFFFFF",
+    borderRadius: 6,
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderWidth: 1,
+    borderColor: "#FFFFFF",
+  },
+
+  pageButtonDisabled: {
+    backgroundColor: "#CCCCCC",
+    borderColor: "#CCCCCC",
+  },
+
+  pageButtonText: {
+    color: "#000080",
+    fontSize: 13,
+    fontWeight: "600",
+  },
+
+  pageInfo: {
+    color: "#FFFFFF",
+    fontSize: 14,
+    fontWeight: "600",
+    minWidth: 60,
+    textAlign: "center",
   },
 });
