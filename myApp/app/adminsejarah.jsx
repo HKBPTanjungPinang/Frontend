@@ -18,6 +18,7 @@ import {
 } from "react-native";
 
 import {
+    appendFileToFormData,
     createAdminItem,
     deleteAdminItem,
     getAdminList,
@@ -136,13 +137,16 @@ export default function AdminSejarahScreen() {
   };
 
   const buildFormData = () => {
+    console.log("[adminsejarah] buildFormData START");
     const data = new FormData();
+    
+    console.log("[adminsejarah] Appending deskripsi:", form.deskripsi.substring(0, 50));
     data.append("deskripsi", form.deskripsi);
-
-    if (form.gambar?.file) {
-      data.append("gambar", form.gambar.file, form.gambar.name);
-    }
-
+    
+    console.log("[adminsejarah] Appending gambar file...");
+    appendFileToFormData(data, "gambar", form.gambar);
+    
+    console.log("[adminsejarah] buildFormData END - FormData ready");
     return data;
   };
 
@@ -159,17 +163,31 @@ export default function AdminSejarahScreen() {
 
     try {
       setSaving(true);
+      console.log("[adminsejarah] submitForm START");
+      console.log("[adminsejarah] Mode:", mode);
+      console.log("[adminsejarah] Form data:", {
+        deskripsi: form.deskripsi.substring(0, 50),
+        gambar: form.gambar ? { name: form.gambar.name, type: form.gambar.type } : null,
+      });
 
       if (mode === "create") {
+        console.log("[adminsejarah] Creating new item");
         await createAdminItem("sejarah", buildFormData());
       } else {
+        console.log("[adminsejarah] Updating item:", getItemId(selected));
         await updateAdminItem("sejarah", getItemId(selected), buildFormData());
       }
 
+      console.log("[adminsejarah] submitForm SUCCESS");
       setModalVisible(false);
       await loadData();
     } catch (err) {
-      Alert.alert("Gagal menyimpan", err.message || "Data belum tersimpan.");
+      console.error("[adminsejarah] submitForm ERROR:", err);
+      console.error("[adminsejarah] Error message:", err.message);
+      Alert.alert(
+        "Gagal menyimpan",
+        `${err.message}\n\nLihat console untuk detail lengkap.`
+      );
     } finally {
       setSaving(false);
     }

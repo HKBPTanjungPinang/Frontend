@@ -17,6 +17,7 @@ import {
 } from "react-native";
 
 import {
+    appendFileToFormData,
     createAdminItem,
     deleteAdminItem,
     getAdminList,
@@ -121,18 +122,23 @@ export default function AdminPdfManagerScreen({
   };
 
   const buildFormData = () => {
+    console.log(`[AdminPdfManagerScreen-${category}] buildFormData START`);
     const data = new FormData();
+    
+    console.log(`[AdminPdfManagerScreen-${category}] Appending tanggal: ${form.tanggal}`);
     data.append("tanggal", form.tanggal);
 
     if (showLocationFields) {
+      console.log(`[AdminPdfManagerScreen-${category}] Appending lokasi: ${form.lokasi}`);
       data.append("lokasi", form.lokasi);
+      console.log(`[AdminPdfManagerScreen-${category}] Appending waktu: ${form.waktu}`);
       data.append("waktu", form.waktu);
     }
 
-    if (form.file?.file) {
-      data.append("file", form.file.file, form.file.name);
-    }
+    console.log(`[AdminPdfManagerScreen-${category}] Appending file...`);
+    appendFileToFormData(data, "file", form.file);
 
+    console.log(`[AdminPdfManagerScreen-${category}] buildFormData END - FormData ready`);
     return data;
   };
 
@@ -149,17 +155,33 @@ export default function AdminPdfManagerScreen({
 
     try {
       setSaving(true);
+      console.log(`[AdminPdfManagerScreen-${category}] submitForm START`);
+      console.log(`[AdminPdfManagerScreen-${category}] Mode:`, mode);
+      console.log(`[AdminPdfManagerScreen-${category}] Form data:`, {
+        tanggal: form.tanggal,
+        lokasi: form.lokasi,
+        waktu: form.waktu,
+        file: form.file ? { name: form.file.name, type: form.file.type } : null,
+      });
 
       if (mode === "create") {
+        console.log(`[AdminPdfManagerScreen-${category}] Creating new item`);
         await createAdminItem(category, buildFormData());
       } else {
+        console.log(`[AdminPdfManagerScreen-${category}] Updating item:`, getItemId(selected));
         await updateAdminItem(category, getItemId(selected), buildFormData());
       }
 
+      console.log(`[AdminPdfManagerScreen-${category}] submitForm SUCCESS`);
       setModalVisible(false);
       await loadData();
     } catch (err) {
-      Alert.alert("Gagal menyimpan", err.message || "Data belum tersimpan.");
+      console.error(`[AdminPdfManagerScreen-${category}] submitForm ERROR:`, err);
+      console.error(`[AdminPdfManagerScreen-${category}] Error message:`, err.message);
+      Alert.alert(
+        "Gagal menyimpan",
+        `${err.message}\n\nLihat console untuk detail lengkap.`
+      );
     } finally {
       setSaving(false);
     }

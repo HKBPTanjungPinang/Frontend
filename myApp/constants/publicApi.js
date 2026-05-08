@@ -10,6 +10,8 @@ export const API_BASE_URL =
   Constants.expoConfig?.extra?.apiBaseUrl ||
   CLOUD_API_BASE_URL;
 
+console.log("[publicApi] API_BASE_URL configured:", API_BASE_URL);
+
 export const PUBLIC_ENDPOINTS = {
   "minggu-batak": "/api/minggu-batak",
   "minggu-indonesia": "/api/minggu-indonesia",
@@ -26,7 +28,9 @@ export const buildApiUrl = (path) => {
     ? path
     : `/${path}`;
 
-  return `${trimSlash(API_BASE_URL)}${normalizedPath}`;
+  const fullUrl = `${trimSlash(API_BASE_URL)}${normalizedPath}`;
+  console.log(`[buildApiUrl] ${path} -> ${fullUrl}`);
+  return fullUrl;
 };
 
 export const getPublicEndpoint = (category) => {
