@@ -36,7 +36,6 @@ export default function AcaraMingguScreen() {
             style={styles.button}
             onPress={() => router.push("/acarabahasabatak")}
           >
-            <Ionicons name="language-outline" size={22} color="#000000" />
             <Text style={styles.buttonText}>Minggu Bahasa Batak</Text>
           </TouchableOpacity>
 
@@ -44,7 +43,6 @@ export default function AcaraMingguScreen() {
             style={styles.button}
             onPress={() => router.push("/acarabahasaindonesia")}
           >
-            <Ionicons name="document-text-outline" size={22} color="#000000" />
             <Text style={styles.buttonText}>Minggu Bahasa Indonesia</Text>
           </TouchableOpacity>
         </View>

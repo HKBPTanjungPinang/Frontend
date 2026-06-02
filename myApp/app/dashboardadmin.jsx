@@ -3,13 +3,13 @@ import { LinearGradient } from "expo-linear-gradient";
 import { useRouter } from "expo-router";
 import { useState } from "react";
 import {
-  ActivityIndicator,
-  Alert,
-  Image,
-  StyleSheet,
-  Text,
-  TouchableOpacity,
-  View,
+    ActivityIndicator,
+    Alert,
+    Image,
+    StyleSheet,
+    Text,
+    TouchableOpacity,
+    View,
 } from "react-native";
 
 import { clearAllAdminData, logoutAdmin } from "../constants/adminApi";
@@ -110,7 +110,7 @@ export default function DashboardAdminScreen() {
             style={styles.card}
             onPress={() => router.push("/adminpartangiangankeluarga")}
           >
-            <FontAwesome5 name="cross" size={55} color="black" />
+            <Ionicons name="add" size={55} color="black" />
             <Text style={styles.cardText}>Partangiangan Keluarga</Text>
           </TouchableOpacity>
 

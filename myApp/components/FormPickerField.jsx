@@ -1,12 +1,13 @@
 import { Ionicons } from "@expo/vector-icons";
 import { useMemo, useState } from "react";
 import {
-  Modal,
-  StyleSheet,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  View,
+    Modal,
+    ScrollView,
+    StyleSheet,
+    Text,
+    TextInput,
+    TouchableOpacity,
+    View
 } from "react-native";
 
 const pad = (value) => String(value).padStart(2, "0");
@@ -182,27 +183,82 @@ export default function FormPickerField({
             ) : (
               <View>
                 <Text style={styles.timeTitle}>Pilih Waktu</Text>
-                <View style={styles.timeInputShell}>
-                  <Ionicons name="time-outline" size={22} color="#000080" />
-                  <TextInput
-                    style={styles.timeInput}
-                    value={timeDraft}
-                    onChangeText={setTimeDraft}
-                    placeholder="19:00"
-                    placeholderTextColor="#999"
-                    keyboardType="numbers-and-punctuation"
-                  />
-                </View>
-                <View style={styles.quickTimes}>
-                  {["17:00", "18:00", "19:00", "20:00"].map((time) => (
-                    <TouchableOpacity
-                      key={time}
-                      style={styles.quickTimeButton}
-                      onPress={() => setTimeDraft(time)}
+                <View style={styles.timePickerContainer}>
+                  <View style={styles.timeColumnContainer}>
+                    <Text style={styles.timeColumnLabel}>Jam</Text>
+                    <ScrollView
+                      style={styles.timeScrollView}
+                      showsVerticalScrollIndicator={true}
+                      scrollEventThrottle={16}
                     >
-                      <Text style={styles.quickTimeText}>{time}</Text>
-                    </TouchableOpacity>
-                  ))}
+                      {Array.from({ length: 24 }, (_, i) => i).map((hour) => {
+                        const hourStr = String(hour).padStart(2, "0");
+                        const isSelected = timeDraft.startsWith(hourStr);
+                        return (
+                          <TouchableOpacity
+                            key={`hour-${hour}`}
+                            style={[
+                              styles.timeOption,
+                              isSelected && styles.timeOptionSelected,
+                            ]}
+                            onPress={() => {
+                              const [, min] = timeDraft.split(":");
+                              const newMin = min || "00";
+                              setTimeDraft(`${hourStr}:${newMin}`);
+                            }}
+                          >
+                            <Text
+                              style={[
+                                styles.timeOptionText,
+                                isSelected && styles.timeOptionTextSelected,
+                              ]}
+                            >
+                              {hourStr}
+                            </Text>
+                          </TouchableOpacity>
+                        );
+                      })}
+                    </ScrollView>
+                  </View>
+
+                  <Text style={styles.timeSeparator}>:</Text>
+
+                  <View style={styles.timeColumnContainer}>
+                    <Text style={styles.timeColumnLabel}>Menit</Text>
+                    <ScrollView
+                      style={styles.timeScrollView}
+                      showsVerticalScrollIndicator={true}
+                      scrollEventThrottle={16}
+                    >
+                      {Array.from({ length: 60 }, (_, i) => i).map((minute) => {
+                        const minuteStr = String(minute).padStart(2, "0");
+                        const [hour] = timeDraft.split(":");
+                        const isSelected = timeDraft.endsWith(minuteStr);
+                        return (
+                          <TouchableOpacity
+                            key={`minute-${minute}`}
+                            style={[
+                              styles.timeOption,
+                              isSelected && styles.timeOptionSelected,
+                            ]}
+                            onPress={() => {
+                              const selectedHour = hour || "00";
+                              setTimeDraft(`${selectedHour}:${minuteStr}`);
+                            }}
+                          >
+                            <Text
+                              style={[
+                                styles.timeOptionText,
+                                isSelected && styles.timeOptionTextSelected,
+                              ]}
+                            >
+                              {minuteStr}
+                            </Text>
+                          </TouchableOpacity>
+                        );
+                      })}
+                    </ScrollView>
+                  </View>
                 </View>
               </View>
             )}
@@ -378,42 +434,61 @@ const styles = StyleSheet.create({
     marginBottom: 14,
   },
 
-  timeInputShell: {
-    minHeight: 50,
-    borderRadius: 6,
-    borderWidth: 1,
-    borderColor: "#CCCCCC",
+  timePickerContainer: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 10,
-    paddingHorizontal: 12,
-  },
-
-  timeInput: {
-    flex: 1,
-    color: "#000",
-    fontSize: 18,
-    fontWeight: "700",
-  },
-
-  quickTimes: {
-    flexDirection: "row",
-    flexWrap: "wrap",
+    justifyContent: "center",
     gap: 8,
-    marginTop: 14,
+    marginBottom: 16,
+    height: 280,
   },
 
-  quickTimeButton: {
-    backgroundColor: "#000080",
-    borderRadius: 6,
-    paddingHorizontal: 14,
-    paddingVertical: 9,
+  timeColumnContainer: {
+    flex: 1,
+    alignItems: "center",
   },
 
-  quickTimeText: {
-    color: "#FFFFFF",
-    fontSize: 13,
+  timeColumnLabel: {
+    color: "#000",
+    fontSize: 14,
     fontWeight: "700",
+    marginBottom: 8,
+  },
+
+  timeScrollView: {
+    flex: 1,
+    width: "100%",
+    maxHeight: 240,
+  },
+
+  timeOption: {
+    paddingVertical: 12,
+    paddingHorizontal: 12,
+    borderRadius: 6,
+    marginVertical: 4,
+    backgroundColor: "#F5F5F5",
+    alignItems: "center",
+  },
+
+  timeOptionSelected: {
+    backgroundColor: "#000080",
+  },
+
+  timeOptionText: {
+    color: "#000",
+    fontSize: 16,
+    fontWeight: "600",
+  },
+
+  timeOptionTextSelected: {
+    color: "#FFFFFF",
+  },
+
+  timeSeparator: {
+    color: "#000",
+    fontSize: 24,
+    fontWeight: "700",
+    marginBottom: 20,
   },
 
   modalActions: {
