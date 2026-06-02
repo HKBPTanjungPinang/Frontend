@@ -12,7 +12,6 @@ import {
     ScrollView,
     StyleSheet,
     Text,
-    TextInput,
     TouchableOpacity,
     View,
 } from "react-native";
@@ -30,6 +29,7 @@ import {
     getItemDescription,
     getItemId,
 } from "../constants/publicApi";
+import FormPickerField from "../components/FormPickerField";
 
 const emptyForm = {
   deskripsi: "",
@@ -256,6 +256,7 @@ export default function AdminSejarahScreen() {
             <View style={styles.messageBox}>
               <Text style={styles.messageText}>{error}</Text>
               <TouchableOpacity style={styles.retryButton} onPress={loadData}>
+                <Ionicons name="refresh" size={17} color="#FFFFFF" />
                 <Text style={styles.retryText}>Coba Lagi</Text>
               </TouchableOpacity>
             </View>
@@ -305,14 +306,17 @@ export default function AdminSejarahScreen() {
 
       <View style={styles.buttonRow}>
         <TouchableOpacity style={styles.actionButton} onPress={deleteSelected}>
+          <Ionicons name="trash-outline" size={18} color="#FFFFFF" />
           <Text style={styles.actionButtonText}>Hapus</Text>
         </TouchableOpacity>
 
         <TouchableOpacity style={styles.actionButton} onPress={openEdit}>
+          <Ionicons name="create-outline" size={18} color="#FFFFFF" />
           <Text style={styles.actionButtonText}>Ubah</Text>
         </TouchableOpacity>
 
         <TouchableOpacity style={styles.actionButton} onPress={openCreate}>
+          <Ionicons name="add-circle-outline" size={18} color="#FFFFFF" />
           <Text style={styles.actionButtonText}>Tambah</Text>
         </TouchableOpacity>
       </View>
@@ -324,12 +328,14 @@ export default function AdminSejarahScreen() {
               {mode === "create" ? "Tambah Sejarah" : "Ubah Sejarah"}
             </Text>
 
-            <Text style={styles.inputLabel}>Deskripsi</Text>
-            <TextInput
-              style={[styles.input, styles.textArea]}
+            <FormPickerField
+              label="Deskripsi"
+              mode="text"
+              icon="document-text-outline"
+              placeholder="Masukkan deskripsi sejarah"
               multiline
               value={form.deskripsi}
-              onChangeText={(deskripsi) =>
+              onChange={(deskripsi) =>
                 setForm((current) => ({ ...current, deskripsi }))
               }
             />
@@ -347,6 +353,7 @@ export default function AdminSejarahScreen() {
                 onPress={() => setModalVisible(false)}
                 disabled={saving}
               >
+                <Ionicons name="close" size={18} color="#FFFFFF" />
                 <Text style={styles.modalButtonText}>Batal</Text>
               </TouchableOpacity>
 
@@ -355,6 +362,7 @@ export default function AdminSejarahScreen() {
                 onPress={submitForm}
                 disabled={saving}
               >
+                <Ionicons name="save-outline" size={18} color="#FFFFFF" />
                 <Text style={styles.modalButtonText}>
                   {saving ? "Menyimpan..." : "Simpan"}
                 </Text>
@@ -384,6 +392,10 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
     marginRight: 8,
+    width: 38,
+    height: 38,
+    borderRadius: 8,
+    backgroundColor: "#D9D9D9",
   },
 
   headerTitle: {
@@ -432,6 +444,9 @@ const styles = StyleSheet.create({
     borderRadius: 6,
     paddingHorizontal: 18,
     paddingVertical: 10,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
   },
 
   retryText: {
@@ -479,10 +494,12 @@ const styles = StyleSheet.create({
   actionButton: {
     backgroundColor: "#000080",
     flex: 1,
-    height: 40,
+    minHeight: 44,
     justifyContent: "center",
     alignItems: "center",
-    borderRadius: 2,
+    borderRadius: 6,
+    flexDirection: "row",
+    gap: 6,
   },
 
   actionButtonText: {
@@ -509,30 +526,6 @@ const styles = StyleSheet.create({
     fontWeight: "700",
     color: "#000",
     marginBottom: 16,
-  },
-
-  inputLabel: {
-    fontSize: 14,
-    fontWeight: "700",
-    color: "#111",
-    marginBottom: 6,
-  },
-
-  input: {
-    backgroundColor: "#FFFFFF",
-    borderRadius: 6,
-    borderWidth: 1,
-    borderColor: "#CCCCCC",
-    paddingHorizontal: 12,
-    paddingVertical: 10,
-    marginBottom: 14,
-    fontSize: 15,
-    color: "#000",
-  },
-
-  textArea: {
-    minHeight: 130,
-    textAlignVertical: "top",
   },
 
   fileButton: {
@@ -563,7 +556,10 @@ const styles = StyleSheet.create({
     backgroundColor: "#000080",
     borderRadius: 6,
     paddingVertical: 12,
+    flexDirection: "row",
+    justifyContent: "center",
     alignItems: "center",
+    gap: 6,
   },
 
   cancelButton: {

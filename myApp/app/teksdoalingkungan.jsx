@@ -72,6 +72,10 @@ const styles = StyleSheet.create({
     marginRight: 8,
     justifyContent: "center",
     alignItems: "center",
+    width: 38,
+    height: 38,
+    borderRadius: 8,
+    backgroundColor: "#D9D9D9",
   },
 
   title: {
@@ -88,6 +92,12 @@ const styles = StyleSheet.create({
 
   iconButton: {
     marginLeft: 14,
+    width: 38,
+    height: 38,
+    borderRadius: 8,
+    backgroundColor: "#D9D9D9",
+    justifyContent: "center",
+    alignItems: "center",
   },
 
   content: {

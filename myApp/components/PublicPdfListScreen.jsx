@@ -18,6 +18,7 @@ import {
   getItemTitle,
   getPublicList,
 } from "../constants/publicApi";
+import DateSearchBar from "./DateSearchBar";
 
 export default function PublicPdfListScreen({
   category,
@@ -29,12 +30,16 @@ export default function PublicPdfListScreen({
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState("");
+  const [searchDate, setSearchDate] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
 
   const loadData = useCallback(async () => {
     try {
       setError("");
       const data = await getPublicList(category);
       setItems(data);
+      setCurrentPage(1);
     } catch (err) {
       setError(err.message || "Data belum bisa dimuat");
     } finally {
@@ -73,6 +78,25 @@ export default function PublicPdfListScreen({
     });
   };
 
+  const handleDateChange = (date) => {
+    setSearchDate(date);
+    setCurrentPage(1);
+  };
+
+  const filteredItems = searchDate
+    ? items.filter((item) => {
+        const itemDate = getItemDate(item) || "";
+        return itemDate.includes(searchDate);
+      })
+    : items;
+
+  const totalPages = Math.ceil(filteredItems.length / itemsPerPage);
+  const paginatedItems = filteredItems.slice(
+    (currentPage - 1) * itemsPerPage,
+    currentPage * itemsPerPage
+  );
+  const showFullMeta = category === "partangiangan-wijk";
+
   return (
     <LinearGradient
       colors={gradient}
@@ -89,6 +113,14 @@ export default function PublicPdfListScreen({
           {title}
         </Text>
       </View>
+
+      {!loading && !error ? (
+        <DateSearchBar
+          value={searchDate}
+          onChange={handleDateChange}
+          placeholder="Cari tanggal (YYYY-MM-DD)"
+        />
+      ) : null}
 
       {loading ? (
         <View style={styles.centerState}>
@@ -107,22 +139,27 @@ export default function PublicPdfListScreen({
             <View style={styles.messageBox}>
               <Text style={styles.messageText}>{error}</Text>
               <TouchableOpacity style={styles.retryButton} onPress={loadData}>
+                <Ionicons name="refresh" size={17} color="#FFFFFF" />
                 <Text style={styles.retryText}>Coba Lagi</Text>
               </TouchableOpacity>
             </View>
           ) : null}
 
-          {!error && items.length === 0 ? (
+          {!error && filteredItems.length === 0 ? (
             <View style={styles.messageBox}>
-              <Text style={styles.messageText}>Belum ada data.</Text>
+              <Text style={styles.messageText}>
+                {searchDate ? "Tidak ada data yang cocok." : "Belum ada data."}
+              </Text>
             </View>
           ) : null}
 
-          {items.map((item, index) => {
+          {paginatedItems.map((item, index) => {
             const id = getItemId(item) || index;
-            const meta = [getItemDate(item), item.lokasi, item.waktu]
-              .filter(Boolean)
-              .join(" - ");
+            const titleIndex = (currentPage - 1) * itemsPerPage + index + 1;
+            const metaParts = showFullMeta
+              ? [getItemDate(item), item.waktu, item.lokasi]
+              : [getItemDate(item)];
+            const meta = metaParts.filter(Boolean).join(" - ");
 
             return (
               <TouchableOpacity
@@ -137,7 +174,7 @@ export default function PublicPdfListScreen({
 
                 <View style={styles.cardTextGroup}>
                   <Text style={styles.pdfText} numberOfLines={1}>
-                    {getItemTitle(item, `${title} ${index + 1}`)}
+                    {getItemTitle(item, `${title} ${titleIndex}`)}
                   </Text>
                   {meta ? (
                     <Text style={styles.dateText} numberOfLines={1}>
@@ -148,6 +185,40 @@ export default function PublicPdfListScreen({
               </TouchableOpacity>
             );
           })}
+
+          {totalPages > 1 ? (
+            <View style={styles.paginationContainer}>
+              <TouchableOpacity
+                style={[
+                  styles.pageButton,
+                  currentPage === 1 && styles.pageButtonDisabled,
+                ]}
+                onPress={() => setCurrentPage((page) => page - 1)}
+                disabled={currentPage === 1}
+              >
+                <Ionicons name="chevron-back" size={17} color="#FFFFFF" />
+                <Text style={styles.pageButtonText}>Sebelumnya</Text>
+              </TouchableOpacity>
+
+              <View style={styles.pageIndicator}>
+                <Text style={styles.pageInfo}>
+                  {currentPage} / {totalPages}
+                </Text>
+              </View>
+
+              <TouchableOpacity
+                style={[
+                  styles.pageButton,
+                  currentPage === totalPages && styles.pageButtonDisabled,
+                ]}
+                onPress={() => setCurrentPage((page) => page + 1)}
+                disabled={currentPage === totalPages}
+              >
+                <Text style={styles.pageButtonText}>Berikutnya</Text>
+                <Ionicons name="chevron-forward" size={17} color="#FFFFFF" />
+              </TouchableOpacity>
+            </View>
+          ) : null}
         </ScrollView>
       )}
     </LinearGradient>
@@ -173,6 +244,8 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
     marginRight: 10,
+    borderRadius: 8,
+    backgroundColor: "#D9D9D9",
   },
 
   headerTitle: {
@@ -183,7 +256,7 @@ const styles = StyleSheet.create({
   },
 
   scrollContent: {
-    paddingBottom: 30,
+    paddingBottom: 34,
   },
 
   centerState: {
@@ -202,7 +275,7 @@ const styles = StyleSheet.create({
   messageBox: {
     backgroundColor: "#D9D9D9",
     borderRadius: 8,
-    padding: 18,
+    padding: 20,
     marginBottom: 18,
   },
 
@@ -220,6 +293,9 @@ const styles = StyleSheet.create({
     borderRadius: 6,
     paddingHorizontal: 18,
     paddingVertical: 10,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
   },
 
   retryText: {
@@ -233,13 +309,24 @@ const styles = StyleSheet.create({
     alignItems: "center",
     backgroundColor: "#D9D9D9",
     borderRadius: 8,
-    paddingVertical: 16,
+    paddingVertical: 15,
     paddingHorizontal: 16,
-    marginBottom: 22,
+    marginBottom: 14,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
   },
 
   iconContainer: {
     marginRight: 12,
+    width: 42,
+    height: 42,
+    borderRadius: 8,
+    backgroundColor: "#D9D9D9",
+    justifyContent: "center",
+    alignItems: "center",
   },
 
   cardTextGroup: {
@@ -256,5 +343,49 @@ const styles = StyleSheet.create({
     marginTop: 4,
     fontSize: 12,
     color: "#333333",
+  },
+
+  paginationContainer: {
+    flexDirection: "row",
+    justifyContent: "center",
+    alignItems: "center",
+    gap: 10,
+    marginTop: 14,
+    marginBottom: 20,
+  },
+
+  pageButton: {
+    backgroundColor: "#000080",
+    borderRadius: 6,
+    paddingHorizontal: 12,
+    paddingVertical: 9,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
+  },
+
+  pageButtonDisabled: {
+    backgroundColor: "#CCCCCC",
+  },
+
+  pageButtonText: {
+    color: "#FFFFFF",
+    fontSize: 12,
+    fontWeight: "700",
+  },
+
+  pageIndicator: {
+    backgroundColor: "#D9D9D9",
+    borderRadius: 6,
+    paddingHorizontal: 12,
+    paddingVertical: 9,
+  },
+
+  pageInfo: {
+    color: "#000080",
+    fontSize: 13,
+    fontWeight: "700",
+    minWidth: 48,
+    textAlign: "center",
   },
 });

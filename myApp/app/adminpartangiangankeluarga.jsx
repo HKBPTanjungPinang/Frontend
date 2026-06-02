@@ -1,12 +1,12 @@
 import AdminPdfManagerScreen from "../components/AdminPdfManagerScreen";
 
-export default function AdminDoaLingkunganScreen() {
+export default function AdminPartangianganKeluargaScreen() {
   return (
     <AdminPdfManagerScreen
-      category="partangiangan-wijk"
+      category="partangiangan-keluarga"
       gradient={["#0000A8", "#E6E6E6"]}
       showLocationFields
-      title="Partangiangan Wijk"
+      title="Acara Partangiangan Keluarga"
     />
   );
 }

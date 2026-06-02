@@ -120,6 +120,7 @@ export default function PdfViewerScreen() {
           <View style={styles.messageBox}>
             <Text style={styles.messageText}>{error}</Text>
             <TouchableOpacity style={styles.primaryButton} onPress={handleRefresh}>
+              <Ionicons name="refresh" size={18} color="#FFFFFF" />
               <Text style={styles.primaryButtonText}>Coba Lagi</Text>
             </TouchableOpacity>
           </View>
@@ -187,6 +188,10 @@ const styles = StyleSheet.create({
     marginRight: 8,
     justifyContent: "center",
     alignItems: "center",
+    width: 38,
+    height: 38,
+    borderRadius: 8,
+    backgroundColor: "#D9D9D9",
   },
 
   title: {
@@ -203,6 +208,12 @@ const styles = StyleSheet.create({
 
   iconButton: {
     marginLeft: 14,
+    width: 38,
+    height: 38,
+    borderRadius: 8,
+    backgroundColor: "#D9D9D9",
+    justifyContent: "center",
+    alignItems: "center",
   },
 
   content: {
@@ -245,6 +256,9 @@ const styles = StyleSheet.create({
     borderRadius: 6,
     paddingHorizontal: 22,
     paddingVertical: 12,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
   },
 
   primaryButtonText: {

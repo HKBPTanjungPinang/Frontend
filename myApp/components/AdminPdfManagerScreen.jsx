@@ -11,7 +11,6 @@ import {
     ScrollView,
     StyleSheet,
     Text,
-    TextInput,
     TouchableOpacity,
     View,
 } from "react-native";
@@ -30,6 +29,8 @@ import {
     getItemTitle,
     openFileView,
 } from "../constants/publicApi";
+import DateSearchBar from "./DateSearchBar";
+import FormPickerField from "./FormPickerField";
 
 const emptyForm = {
   tanggal: "",
@@ -216,6 +217,11 @@ export default function AdminPdfManagerScreen({
     loadData();
   };
 
+  const handleDateChange = (date) => {
+    setSearchDate(date);
+    setCurrentPage(1);
+  };
+
   // Filter items by search date
   const filteredItems = searchDate
     ? items.filter((item) => {
@@ -230,6 +236,7 @@ export default function AdminPdfManagerScreen({
     (currentPage - 1) * itemsPerPage,
     currentPage * itemsPerPage
   );
+  const showFullMeta = category === "partangiangan-wijk";
 
   return (
     <LinearGradient
@@ -248,28 +255,13 @@ export default function AdminPdfManagerScreen({
         </Text>
       </View>
 
-      {!loading && !error && (
-        <View style={styles.searchContainer}>
-          <TextInput
-            style={styles.searchInput}
-            placeholder="Cari tanggal (YYYY-MM-DD)"
-            placeholderTextColor="#999"
-            value={searchDate}
-            onChangeText={setSearchDate}
-          />
-          {searchDate ? (
-            <TouchableOpacity
-              style={styles.clearButton}
-              onPress={() => {
-                setSearchDate("");
-                setCurrentPage(1);
-              }}
-            >
-              <Ionicons name="close-circle" size={20} color="#666" />
-            </TouchableOpacity>
-          ) : null}
-        </View>
-      )}
+      {!loading && !error ? (
+        <DateSearchBar
+          value={searchDate}
+          onChange={handleDateChange}
+          placeholder="Cari tanggal (YYYY-MM-DD)"
+        />
+      ) : null}
 
       {loading ? (
         <View style={styles.centerState}>
@@ -288,6 +280,7 @@ export default function AdminPdfManagerScreen({
             <View style={styles.messageBox}>
               <Text style={styles.messageText}>{error}</Text>
               <TouchableOpacity style={styles.retryButton} onPress={loadData}>
+                <Ionicons name="refresh" size={17} color="#FFFFFF" />
                 <Text style={styles.retryText}>Coba Lagi</Text>
               </TouchableOpacity>
             </View>
@@ -304,6 +297,10 @@ export default function AdminPdfManagerScreen({
           {paginatedItems.map((item, index) => {
             const id = getItemId(item) || index;
             const isSelected = getItemId(selected) === getItemId(item);
+            const titleIndex = (currentPage - 1) * itemsPerPage + index + 1;
+            const metaParts = showFullMeta
+              ? [getItemDate(item), item.waktu, item.lokasi]
+              : [getItemDate(item)];
 
             return (
               <TouchableOpacity
@@ -317,12 +314,10 @@ export default function AdminPdfManagerScreen({
 
                 <View style={styles.cardTextGroup}>
                   <Text style={styles.pdfText} numberOfLines={1}>
-                    {getItemTitle(item, `${title} ${index + 1}`)}
+                    {getItemTitle(item, `${title} ${titleIndex}`)}
                   </Text>
                   <Text style={styles.metaText} numberOfLines={1}>
-                    {[getItemDate(item), item.lokasi, item.waktu]
-                      .filter(Boolean)
-                      .join(" - ")}
+                    {metaParts.filter(Boolean).join(" - ")}
                   </Text>
                 </View>
               </TouchableOpacity>
@@ -336,25 +331,29 @@ export default function AdminPdfManagerScreen({
                   styles.pageButton,
                   currentPage === 1 && styles.pageButtonDisabled,
                 ]}
-                onPress={() => setCurrentPage(currentPage - 1)}
+                onPress={() => setCurrentPage((page) => page - 1)}
                 disabled={currentPage === 1}
               >
+                <Ionicons name="chevron-back" size={17} color="#FFFFFF" />
                 <Text style={styles.pageButtonText}>Sebelumnya</Text>
               </TouchableOpacity>
 
-              <Text style={styles.pageInfo}>
-                {currentPage} / {totalPages}
-              </Text>
+              <View style={styles.pageIndicator}>
+                <Text style={styles.pageInfo}>
+                  {currentPage} / {totalPages}
+                </Text>
+              </View>
 
               <TouchableOpacity
                 style={[
                   styles.pageButton,
                   currentPage === totalPages && styles.pageButtonDisabled,
                 ]}
-                onPress={() => setCurrentPage(currentPage + 1)}
+                onPress={() => setCurrentPage((page) => page + 1)}
                 disabled={currentPage === totalPages}
               >
                 <Text style={styles.pageButtonText}>Berikutnya</Text>
+                <Ionicons name="chevron-forward" size={17} color="#FFFFFF" />
               </TouchableOpacity>
             </View>
           )}
@@ -363,14 +362,17 @@ export default function AdminPdfManagerScreen({
 
       <View style={styles.bottomButtonRow}>
         <TouchableOpacity style={styles.actionButton} onPress={deleteSelected}>
+          <Ionicons name="trash-outline" size={18} color="#FFFFFF" />
           <Text style={styles.actionButtonText}>Hapus</Text>
         </TouchableOpacity>
 
         <TouchableOpacity style={styles.actionButton} onPress={openEdit}>
+          <Ionicons name="create-outline" size={18} color="#FFFFFF" />
           <Text style={styles.actionButtonText}>Ubah</Text>
         </TouchableOpacity>
 
         <TouchableOpacity style={styles.actionButton} onPress={openCreate}>
+          <Ionicons name="add-circle-outline" size={18} color="#FFFFFF" />
           <Text style={styles.actionButtonText}>Tambah</Text>
         </TouchableOpacity>
       </View>
@@ -382,33 +384,35 @@ export default function AdminPdfManagerScreen({
               {mode === "create" ? "Tambah Data" : "Ubah Data"}
             </Text>
 
-            <Text style={styles.inputLabel}>Tanggal</Text>
-            <TextInput
-              style={styles.input}
-              placeholder="YYYY-MM-DD"
+            <FormPickerField
+              label="Tanggal"
+              mode="date"
+              placeholder="Pilih tanggal"
               value={form.tanggal}
-              onChangeText={(tanggal) =>
+              onChange={(tanggal) =>
                 setForm((current) => ({ ...current, tanggal }))
               }
             />
 
             {showLocationFields ? (
               <>
-                <Text style={styles.inputLabel}>Lokasi</Text>
-                <TextInput
-                  style={styles.input}
+                <FormPickerField
+                  label="Lokasi"
+                  mode="text"
+                  icon="location-outline"
+                  placeholder="Masukkan lokasi"
                   value={form.lokasi}
-                  onChangeText={(lokasi) =>
+                  onChange={(lokasi) =>
                     setForm((current) => ({ ...current, lokasi }))
                   }
                 />
 
-                <Text style={styles.inputLabel}>Waktu</Text>
-                <TextInput
-                  style={styles.input}
-                  placeholder="19:00"
+                <FormPickerField
+                  label="Waktu"
+                  mode="time"
+                  placeholder="Pilih waktu"
                   value={form.waktu}
-                  onChangeText={(waktu) =>
+                  onChange={(waktu) =>
                     setForm((current) => ({ ...current, waktu }))
                   }
                 />
@@ -428,6 +432,7 @@ export default function AdminPdfManagerScreen({
                 onPress={() => setModalVisible(false)}
                 disabled={saving}
               >
+                <Ionicons name="close" size={18} color="#FFFFFF" />
                 <Text style={styles.modalButtonText}>Batal</Text>
               </TouchableOpacity>
 
@@ -436,6 +441,7 @@ export default function AdminPdfManagerScreen({
                 onPress={submitForm}
                 disabled={saving}
               >
+                <Ionicons name="save-outline" size={18} color="#FFFFFF" />
                 <Text style={styles.modalButtonText}>
                   {saving ? "Menyimpan..." : "Simpan"}
                 </Text>
@@ -467,6 +473,8 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
     marginRight: 10,
+    borderRadius: 8,
+    backgroundColor: "#D9D9D9",
   },
 
   headerTitle: {
@@ -514,6 +522,9 @@ const styles = StyleSheet.create({
     borderRadius: 6,
     paddingHorizontal: 18,
     paddingVertical: 10,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
   },
 
   retryText: {
@@ -527,11 +538,16 @@ const styles = StyleSheet.create({
     alignItems: "center",
     backgroundColor: "#D9D9D9",
     borderRadius: 8,
-    paddingVertical: 16,
+    paddingVertical: 15,
     paddingHorizontal: 16,
-    marginBottom: 18,
+    marginBottom: 14,
     borderWidth: 2,
     borderColor: "transparent",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
   },
 
   selectedCard: {
@@ -565,9 +581,12 @@ const styles = StyleSheet.create({
   actionButton: {
     backgroundColor: "#0000A8",
     flex: 1,
-    height: 40,
+    minHeight: 44,
     justifyContent: "center",
     alignItems: "center",
+    borderRadius: 6,
+    flexDirection: "row",
+    gap: 6,
   },
 
   actionButtonText: {
@@ -594,25 +613,6 @@ const styles = StyleSheet.create({
     fontWeight: "700",
     color: "#000",
     marginBottom: 16,
-  },
-
-  inputLabel: {
-    fontSize: 14,
-    fontWeight: "700",
-    color: "#111",
-    marginBottom: 6,
-  },
-
-  input: {
-    backgroundColor: "#FFFFFF",
-    borderRadius: 6,
-    borderWidth: 1,
-    borderColor: "#CCCCCC",
-    paddingHorizontal: 12,
-    paddingVertical: 10,
-    marginBottom: 14,
-    fontSize: 15,
-    color: "#000",
   },
 
   fileButton: {
@@ -643,7 +643,10 @@ const styles = StyleSheet.create({
     backgroundColor: "#000080",
     borderRadius: 6,
     paddingVertical: 12,
+    flexDirection: "row",
+    justifyContent: "center",
     alignItems: "center",
+    gap: 6,
   },
 
   cancelButton: {
@@ -654,31 +657,6 @@ const styles = StyleSheet.create({
     color: "#FFFFFF",
     fontSize: 15,
     fontWeight: "700",
-  },
-
-  searchContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: "#FFFFFF",
-    borderRadius: 8,
-    marginBottom: 18,
-    paddingRight: 12,
-    borderWidth: 1,
-    borderColor: "#CCCCCC",
-  },
-
-  searchInput: {
-    flex: 1,
-    paddingHorizontal: 12,
-    paddingVertical: 10,
-    fontSize: 14,
-    color: "#000",
-  },
-
-  clearButton: {
-    padding: 8,
-    justifyContent: "center",
-    alignItems: "center",
   },
 
   paginationContainer: {
@@ -693,8 +671,11 @@ const styles = StyleSheet.create({
   pageButton: {
     backgroundColor: "#000080",
     borderRadius: 6,
-    paddingHorizontal: 16,
-    paddingVertical: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 9,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
   },
 
   pageButtonDisabled: {
@@ -703,16 +684,22 @@ const styles = StyleSheet.create({
 
   pageButtonText: {
     color: "#FFFFFF",
-    fontSize: 13,
-    fontWeight: "600",
+    fontSize: 12,
+    fontWeight: "700",
+  },
+
+  pageIndicator: {
+    backgroundColor: "#D9D9D9",
+    borderRadius: 6,
+    paddingHorizontal: 12,
+    paddingVertical: 9,
   },
 
   pageInfo: {
-    color: "#FFFFFF",
-    fontSize: 14,
-    fontWeight: "600",
-    minWidth: 60,
+    color: "#000080",
+    fontSize: 13,
+    fontWeight: "700",
+    minWidth: 48,
     textAlign: "center",
   },
 });
-

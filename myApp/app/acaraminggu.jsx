@@ -36,6 +36,7 @@ export default function AcaraMingguScreen() {
             style={styles.button}
             onPress={() => router.push("/acarabahasabatak")}
           >
+            <Ionicons name="language-outline" size={22} color="#000000" />
             <Text style={styles.buttonText}>Minggu Bahasa Batak</Text>
           </TouchableOpacity>
 
@@ -43,6 +44,7 @@ export default function AcaraMingguScreen() {
             style={styles.button}
             onPress={() => router.push("/acarabahasaindonesia")}
           >
+            <Ionicons name="document-text-outline" size={22} color="#000000" />
             <Text style={styles.buttonText}>Minggu Bahasa Indonesia</Text>
           </TouchableOpacity>
         </View>
@@ -65,6 +67,8 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
     zIndex: 10,
+    borderRadius: 8,
+    backgroundColor: "#EAEAEA",
   },
 
   header: {
@@ -95,9 +99,11 @@ const styles = StyleSheet.create({
 
   buttonContainer: {
     flexDirection: "row",
+    flexWrap: "wrap",
     justifyContent: "center",
     alignItems: "center",
     gap: 20,
+    paddingHorizontal: 20,
   },
 
   button: {
@@ -107,12 +113,15 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
     paddingHorizontal: 10,
+    borderRadius: 8,
+    elevation: 4,
+    gap: 8,
   },
 
   buttonText: {
     color: "#000000",
     fontSize: 14,
-    fontWeight: "400",
+    fontWeight: "600",
     textAlign: "center",
   },
 });

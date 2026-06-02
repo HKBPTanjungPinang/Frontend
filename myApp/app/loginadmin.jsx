@@ -1,3 +1,4 @@
+import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import { useRouter } from "expo-router";
 import { useState } from "react";
@@ -60,27 +61,34 @@ export default function LoginAdminScreen() {
         <View style={styles.card}>
           <View style={styles.inputGroup}>
             <Text style={styles.label}>Username:</Text>
-            <TextInput
-              style={styles.input}
-              placeholder=""
-              autoCapitalize="none"
-              value={username}
-              onChangeText={setUsername}
-            />
+            <View style={styles.inputShell}>
+              <Ionicons name="person-outline" size={20} color="#1E1E1E" />
+              <TextInput
+                style={styles.input}
+                placeholder=""
+                autoCapitalize="none"
+                value={username}
+                onChangeText={setUsername}
+              />
+            </View>
           </View>
 
           <View style={styles.inputGroup}>
             <Text style={styles.label}>Password:</Text>
-            <TextInput
-              style={styles.input}
-              placeholder=""
-              secureTextEntry
-              value={password}
-              onChangeText={setPassword}
-            />
+            <View style={styles.inputShell}>
+              <Ionicons name="lock-closed-outline" size={20} color="#1E1E1E" />
+              <TextInput
+                style={styles.input}
+                placeholder=""
+                secureTextEntry
+                value={password}
+                onChangeText={setPassword}
+              />
+            </View>
           </View>
 
           <TouchableOpacity style={styles.forgotContainer}>
+            <Ionicons name="help-circle-outline" size={16} color="#1E1E1E" />
             <Text style={styles.forgotText}>Lupa Password?</Text>
           </TouchableOpacity>
 
@@ -92,7 +100,10 @@ export default function LoginAdminScreen() {
             {loading ? (
               <ActivityIndicator color="#FFFFFF" />
             ) : (
-              <Text style={styles.loginButtonText}>Login</Text>
+              <>
+                <Ionicons name="log-in-outline" size={22} color="#FFFFFF" />
+                <Text style={styles.loginButtonText}>Login</Text>
+              </>
             )}
           </TouchableOpacity>
         </View>
@@ -152,9 +163,16 @@ const styles = StyleSheet.create({
     marginBottom: 6,
   },
 
-  input: {
+  inputShell: {
     borderBottomWidth: 2,
     borderBottomColor: "#1E1E1E",
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+  },
+
+  input: {
+    flex: 1,
     fontSize: 18,
     paddingVertical: 4,
     color: "#000",
@@ -164,6 +182,9 @@ const styles = StyleSheet.create({
     alignSelf: "flex-end",
     marginTop: -12,
     marginBottom: 24,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
   },
 
   forgotText: {
@@ -178,6 +199,10 @@ const styles = StyleSheet.create({
     paddingHorizontal: 34,
     minWidth: 110,
     alignItems: "center",
+    justifyContent: "center",
+    flexDirection: "row",
+    gap: 8,
+    borderRadius: 6,
   },
 
   loginButtonText: {

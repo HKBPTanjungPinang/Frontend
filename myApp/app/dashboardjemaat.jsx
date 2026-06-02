@@ -39,6 +39,7 @@ export default function HomeScreen() {
       {/* Menu Wrapper */}
       <View style={styles.menuWrapper}>
         <View style={styles.menuContainer}>
+          {/* Sejarah */}
           <TouchableOpacity
             style={styles.card}
             onPress={() => router.push("/sejarah")}
@@ -47,6 +48,7 @@ export default function HomeScreen() {
             <Text style={styles.cardText}>Sejarah</Text>
           </TouchableOpacity>
 
+          {/* Acara Minggu */}
           <TouchableOpacity
             style={styles.card}
             onPress={() => router.push("/acaraminggu")}
@@ -55,34 +57,37 @@ export default function HomeScreen() {
             <Text style={styles.cardText}>Acara Minggu</Text>
           </TouchableOpacity>
 
+          {/* Partangiangan Wijk */}
           <TouchableOpacity
             style={styles.card}
             onPress={() => router.push("../acaradoalingkungan")}
           >
             <FontAwesome5 name="cross" size={55} color="black" />
-            <Text style={styles.cardText}>Doa Lingkungan</Text>
+            <Text style={styles.cardText}>Partangiangan Wijk</Text>
           </TouchableOpacity>
 
-          <View
+          {/* Partangiangan Keluarga */}
+          <TouchableOpacity
             style={styles.card}
+            onPress={() => router.push("../partangiangankeluarga")}
           >
-            <Ionicons name="person-circle-outline" size={55} color="#CCCCCC" />
-            <Text style={[styles.cardText, { color: "#CCCCCC" }]}>Warta Jemaat</Text>
-          </View>
+            <Ionicons name="add" size={55} color="black" />
+            <Text style={styles.cardText}>Partangiangan Keluarga</Text>
+          </TouchableOpacity>
         </View>
       </View>
 
       {/* Bottom Navigation */}
       <View style={styles.bottomNav}>
-        <TouchableOpacity>
+        <TouchableOpacity style={styles.navButton}>
           <Ionicons name="home" size={32} color="black" />
         </TouchableOpacity>
 
-        <TouchableOpacity>
+        <TouchableOpacity style={styles.navButton}>
           <MaterialIcons name="featured-play-list" size={32} color="black" />
         </TouchableOpacity>
 
-        <TouchableOpacity>
+        <TouchableOpacity style={styles.navButton}>
           <Ionicons name="settings" size={32} color="black" />
         </TouchableOpacity>
       </View>
@@ -120,7 +125,7 @@ const styles = StyleSheet.create({
     marginTop: 25,
     marginHorizontal: 12,
     marginBottom: 10,
-    borderRadius: 14,
+    borderRadius: 8,
     overflow: "hidden",
     elevation: 6,
     backgroundColor: "#fff",
@@ -158,17 +163,20 @@ const styles = StyleSheet.create({
     width: 145,
     height: 115,
     backgroundColor: "#E5E5E5",
-    borderRadius: 12,
+    borderRadius: 8,
     justifyContent: "center",
     alignItems: "center",
     elevation: 6,
     marginBottom: 25,
+    paddingHorizontal: 10,
   },
 
   cardText: {
     marginTop: 10,
     fontSize: 16,
+    fontWeight: "600",
     color: "#222",
+    textAlign: "center",
   },
 
   bottomNav: {
@@ -176,6 +184,15 @@ const styles = StyleSheet.create({
     backgroundColor: "#E5E5E5",
     flexDirection: "row",
     justifyContent: "space-around",
+    alignItems: "center",
+  },
+
+  navButton: {
+    width: 44,
+    height: 44,
+    borderRadius: 8,
+    backgroundColor: "#D9D9D9",
+    justifyContent: "center",
     alignItems: "center",
   },
 });

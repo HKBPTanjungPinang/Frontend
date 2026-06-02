@@ -15,7 +15,8 @@ console.log("[publicApi] API_BASE_URL configured:", API_BASE_URL);
 export const PUBLIC_ENDPOINTS = {
   "minggu-batak": "/api/minggu-batak",
   "minggu-indonesia": "/api/minggu-indonesia",
-  partangiangan: "/api/partangiangan",
+  "partangiangan-wijk": "/api/partangiangan-wijk",
+  "partangiangan-keluarga": "/api/partangiangan-keluarga",
   kontemporer: "/api/kontemporer",
   tingting: "/api/tingting",
   sejarah: "/api/sejarah",

@@ -8,7 +8,6 @@ import {
   ScrollView,
   StyleSheet,
   Text,
-  TextInput,
   TouchableOpacity,
   View,
 } from "react-native";
@@ -19,6 +18,7 @@ import {
   getItemTitle,
   getPublicList,
 } from "../constants/publicApi";
+import DateSearchBar from "./DateSearchBar";
 
 export default function PublicDetailListScreen({
   category,
@@ -39,6 +39,7 @@ export default function PublicDetailListScreen({
       setError("");
       const data = await getPublicList(category);
       setItems(data);
+      setCurrentPage(1);
     } catch (err) {
       setError(err.message || "Data belum bisa dimuat");
     } finally {
@@ -77,6 +78,11 @@ export default function PublicDetailListScreen({
     });
   };
 
+  const handleDateChange = (date) => {
+    setSearchDate(date);
+    setCurrentPage(1);
+  };
+
   // Filter items by search date
   const filteredItems = searchDate
     ? items.filter((item) => {
@@ -109,28 +115,13 @@ export default function PublicDetailListScreen({
         </Text>
       </View>
 
-      {!loading && !error && (
-        <View style={styles.searchContainer}>
-          <TextInput
-            style={styles.searchInput}
-            placeholder="Cari tanggal (YYYY-MM-DD)"
-            placeholderTextColor="#999"
-            value={searchDate}
-            onChangeText={setSearchDate}
-          />
-          {searchDate ? (
-            <TouchableOpacity
-              style={styles.clearButton}
-              onPress={() => {
-                setSearchDate("");
-                setCurrentPage(1);
-              }}
-            >
-              <Ionicons name="close-circle" size={20} color="#666" />
-            </TouchableOpacity>
-          ) : null}
-        </View>
-      )}
+      {!loading && !error ? (
+        <DateSearchBar
+          value={searchDate}
+          onChange={handleDateChange}
+          placeholder="Cari tanggal (YYYY-MM-DD)"
+        />
+      ) : null}
 
       {loading ? (
         <View style={styles.centerState}>
@@ -149,6 +140,7 @@ export default function PublicDetailListScreen({
             <View style={styles.messageBox}>
               <Text style={styles.messageText}>{error}</Text>
               <TouchableOpacity style={styles.retryButton} onPress={loadData}>
+                <Ionicons name="refresh" size={17} color="#FFFFFF" />
                 <Text style={styles.retryText}>Coba Lagi</Text>
               </TouchableOpacity>
             </View>
@@ -164,6 +156,7 @@ export default function PublicDetailListScreen({
 
           {paginatedItems.map((item, index) => {
             const id = getItemId(item) || index;
+            const titleIndex = (currentPage - 1) * itemsPerPage + index + 1;
             const tanggal = getItemDate(item) || "-";
             const lokasi = item.lokasi || "-";
             const waktu = item.waktu || "-";
@@ -177,7 +170,7 @@ export default function PublicDetailListScreen({
               >
                 <View style={styles.cardContent}>
                   <Text style={styles.cardTitle} numberOfLines={1}>
-                    {getItemTitle(item, `${title} ${index + 1}`)}
+                    {getItemTitle(item, `${title} ${titleIndex}`)}
                   </Text>
 
                   <View style={styles.detailRow}>
@@ -210,25 +203,29 @@ export default function PublicDetailListScreen({
                   styles.pageButton,
                   currentPage === 1 && styles.pageButtonDisabled,
                 ]}
-                onPress={() => setCurrentPage(currentPage - 1)}
+                onPress={() => setCurrentPage((page) => page - 1)}
                 disabled={currentPage === 1}
               >
+                <Ionicons name="chevron-back" size={17} color="#FFFFFF" />
                 <Text style={styles.pageButtonText}>Sebelumnya</Text>
               </TouchableOpacity>
 
-              <Text style={styles.pageInfo}>
-                {currentPage} / {totalPages}
-              </Text>
+              <View style={styles.pageIndicator}>
+                <Text style={styles.pageInfo}>
+                  {currentPage} / {totalPages}
+                </Text>
+              </View>
 
               <TouchableOpacity
                 style={[
                   styles.pageButton,
                   currentPage === totalPages && styles.pageButtonDisabled,
                 ]}
-                onPress={() => setCurrentPage(currentPage + 1)}
+                onPress={() => setCurrentPage((page) => page + 1)}
                 disabled={currentPage === totalPages}
               >
                 <Text style={styles.pageButtonText}>Berikutnya</Text>
+                <Ionicons name="chevron-forward" size={17} color="#FFFFFF" />
               </TouchableOpacity>
             </View>
           )}
@@ -257,6 +254,8 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
     marginRight: 10,
+    borderRadius: 8,
+    backgroundColor: "#D9D9D9",
   },
 
   headerTitle: {
@@ -304,6 +303,9 @@ const styles = StyleSheet.create({
     borderRadius: 6,
     paddingHorizontal: 20,
     paddingVertical: 8,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
   },
 
   retryText: {
@@ -356,31 +358,6 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
 
-  searchContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: "#FFFFFF",
-    borderRadius: 8,
-    marginBottom: 18,
-    paddingRight: 12,
-    borderWidth: 1,
-    borderColor: "#CCCCCC",
-  },
-
-  searchInput: {
-    flex: 1,
-    paddingHorizontal: 12,
-    paddingVertical: 10,
-    fontSize: 14,
-    color: "#000",
-  },
-
-  clearButton: {
-    padding: 8,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-
   paginationContainer: {
     flexDirection: "row",
     justifyContent: "center",
@@ -391,12 +368,15 @@ const styles = StyleSheet.create({
   },
 
   pageButton: {
-    backgroundColor: "#FFFFFF",
+    backgroundColor: "#000080",
     borderRadius: 6,
-    paddingHorizontal: 16,
-    paddingVertical: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 9,
     borderWidth: 1,
-    borderColor: "#FFFFFF",
+    borderColor: "#000080",
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
   },
 
   pageButtonDisabled: {
@@ -405,16 +385,23 @@ const styles = StyleSheet.create({
   },
 
   pageButtonText: {
-    color: "#000080",
-    fontSize: 13,
-    fontWeight: "600",
+    color: "#FFFFFF",
+    fontSize: 12,
+    fontWeight: "700",
+  },
+
+  pageIndicator: {
+    backgroundColor: "#D9D9D9",
+    borderRadius: 6,
+    paddingHorizontal: 12,
+    paddingVertical: 9,
   },
 
   pageInfo: {
-    color: "#FFFFFF",
-    fontSize: 14,
-    fontWeight: "600",
-    minWidth: 60,
+    color: "#000080",
+    fontSize: 13,
+    fontWeight: "700",
+    minWidth: 48,
     textAlign: "center",
   },
 });

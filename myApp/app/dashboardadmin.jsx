@@ -3,13 +3,13 @@ import { LinearGradient } from "expo-linear-gradient";
 import { useRouter } from "expo-router";
 import { useState } from "react";
 import {
-    ActivityIndicator,
-    Alert,
-    Image,
-    StyleSheet,
-    Text,
-    TouchableOpacity,
-    View,
+  ActivityIndicator,
+  Alert,
+  Image,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
 } from "react-native";
 
 import { clearAllAdminData, logoutAdmin } from "../constants/adminApi";
@@ -33,19 +33,19 @@ export default function DashboardAdminScreen() {
               const deleted = await clearAllAdminData();
               Alert.alert(
                 "Data dibersihkan",
-                `${deleted.length} data berhasil dihapus.`
+                `${deleted.length} data berhasil dihapus.`,
               );
             } catch (err) {
               Alert.alert(
                 "Gagal membersihkan",
-                err.message || "Data belum berhasil dihapus."
+                err.message || "Data belum berhasil dihapus.",
               );
             } finally {
               setClearing(false);
             }
           },
         },
-      ]
+      ],
     );
   };
 
@@ -103,14 +103,22 @@ export default function DashboardAdminScreen() {
             onPress={() => router.push("/admindoalingkungan")}
           >
             <FontAwesome5 name="cross" size={55} color="black" />
-            <Text style={styles.cardText}>Doa Lingkungan</Text>
+            <Text style={styles.cardText}>Partangiangan Wijk</Text>
           </TouchableOpacity>
 
-          <View
+          <TouchableOpacity
             style={styles.card}
+            onPress={() => router.push("/adminpartangiangankeluarga")}
           >
+            <FontAwesome5 name="cross" size={55} color="black" />
+            <Text style={styles.cardText}>Partangiangan Keluarga</Text>
+          </TouchableOpacity>
+
+          <View style={styles.card}>
             <Ionicons name="person-circle-outline" size={55} color="#CCCCCC" />
-            <Text style={[styles.cardText, { color: "#CCCCCC" }]}>Warta Jemaat</Text>
+            <Text style={[styles.cardText, { color: "#CCCCCC" }]}>
+              Warta Jemaat
+            </Text>
           </View>
         </View>
       </View>
@@ -118,6 +126,7 @@ export default function DashboardAdminScreen() {
       {/* Bottom Navigation */}
       <View style={styles.bottomNav}>
         <TouchableOpacity
+          style={styles.navButton}
           onPress={() => {
             logoutAdmin();
             router.replace("/optionallogin");
@@ -126,7 +135,11 @@ export default function DashboardAdminScreen() {
           <Ionicons name="log-out-outline" size={32} color="black" />
         </TouchableOpacity>
 
-        <TouchableOpacity onPress={handleClearAll} disabled={clearing}>
+        <TouchableOpacity
+          style={styles.navButton}
+          onPress={handleClearAll}
+          disabled={clearing}
+        >
           {clearing ? (
             <ActivityIndicator color="black" />
           ) : (
@@ -134,7 +147,10 @@ export default function DashboardAdminScreen() {
           )}
         </TouchableOpacity>
 
-        <TouchableOpacity onPress={() => router.push("/settings")}>
+        <TouchableOpacity
+          style={styles.navButton}
+          onPress={() => router.push("/settings")}
+        >
           <Ionicons name="settings" size={32} color="black" />
         </TouchableOpacity>
       </View>
@@ -172,7 +188,7 @@ const styles = StyleSheet.create({
     marginTop: 25,
     marginHorizontal: 12,
     marginBottom: 10,
-    borderRadius: 14,
+    borderRadius: 8,
     overflow: "hidden",
     elevation: 6,
     backgroundColor: "#fff",
@@ -210,17 +226,20 @@ const styles = StyleSheet.create({
     width: 145,
     height: 115,
     backgroundColor: "#E5E5E5",
-    borderRadius: 12,
+    borderRadius: 8,
     justifyContent: "center",
     alignItems: "center",
     elevation: 6,
     marginBottom: 25,
+    paddingHorizontal: 10,
   },
 
   cardText: {
     marginTop: 10,
     fontSize: 16,
+    fontWeight: "600",
     color: "#222",
+    textAlign: "center",
   },
 
   bottomNav: {
@@ -230,5 +249,14 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     alignItems: "center",
     paddingHorizontal: 55,
+  },
+
+  navButton: {
+    width: 44,
+    height: 44,
+    borderRadius: 8,
+    backgroundColor: "#D9D9D9",
+    justifyContent: "center",
+    alignItems: "center",
   },
 });

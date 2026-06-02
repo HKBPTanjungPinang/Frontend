@@ -1,3 +1,4 @@
+import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import { useRouter } from "expo-router";
 import { Image, StyleSheet, Text, TouchableOpacity, View } from "react-native";
@@ -30,6 +31,7 @@ export default function OptionalLoginScreen() {
             style={styles.button}
             onPress={() => router.push("/dashboardjemaat")}
           >
+            <Ionicons name="people-outline" size={22} color="#FFFFFF" />
             <Text style={styles.buttonText}>Jemaat</Text>
           </TouchableOpacity>
 
@@ -37,6 +39,7 @@ export default function OptionalLoginScreen() {
             style={styles.button}
             onPress={() => router.push("/loginadmin")}
           >
+            <Ionicons name="shield-checkmark-outline" size={22} color="#FFFFFF" />
             <Text style={styles.buttonText}>Admin</Text>
           </TouchableOpacity>
         </View>
@@ -81,16 +84,19 @@ const styles = StyleSheet.create({
   },
 
   button: {
-    backgroundColor: "#FFFFFF",
-    paddingVertical: 20,
+    backgroundColor: "#000080",
+    paddingVertical: 16,
     paddingHorizontal: 35,
     borderRadius: 8,
     elevation: 3,
     marginHorizontal: 10,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
   },
 
   buttonText: {
-    color: "#000000",
+    color: "#FFFFFF",
     fontSize: 16,
     fontWeight: "500",
   },

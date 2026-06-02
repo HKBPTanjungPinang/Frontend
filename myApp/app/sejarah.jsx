@@ -1,3 +1,4 @@
+import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import { useRouter } from "expo-router";
 import { useEffect, useState } from "react";
@@ -95,6 +96,7 @@ export default function SejarahScreen() {
               <View style={styles.errorBox}>
                 <Text style={styles.errorText}>{error}</Text>
                 <TouchableOpacity style={styles.retryButton} onPress={loadData}>
+                  <Ionicons name="refresh" size={17} color="#FFFFFF" />
                   <Text style={styles.retryText}>Coba Lagi</Text>
                 </TouchableOpacity>
               </View>
@@ -134,6 +136,7 @@ export default function SejarahScreen() {
             style={styles.kembaliButton}
             onPress={() => router.back()}
           >
+            <Ionicons name="arrow-back" size={18} color="#FFFFFF" />
             <Text style={styles.kembaliText}>Kembali</Text>
           </TouchableOpacity>
         </View>
@@ -220,6 +223,9 @@ const styles = StyleSheet.create({
     borderRadius: 6,
     paddingHorizontal: 18,
     paddingVertical: 10,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
   },
 
   retryText: {
@@ -268,6 +274,8 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
     borderRadius: 8,
+    flexDirection: "row",
+    gap: 6,
   },
 
   kembaliText: {
