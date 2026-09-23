@@ -3,7 +3,7 @@ import * as Linking from "expo-linking";
 import * as WebBrowser from "expo-web-browser";
 
 const envBaseUrl = process.env.EXPO_PUBLIC_API_BASE_URL;
-const CLOUD_API_BASE_URL = "https://app-gereja-api.edgarsimatupang3011.workers.dev/";
+const CLOUD_API_BASE_URL = "https://app-gereja-api.edgarsimatupang3011.workers.dev";
 
 export const API_BASE_URL =
   envBaseUrl ||
@@ -25,12 +25,13 @@ export const PUBLIC_ENDPOINTS = {
 const trimSlash = (value) => String(value || "").replace(/\/+$/, "");
 
 export const buildApiUrl = (path) => {
-  const normalizedPath = String(path || "").startsWith("/")
-    ? path
-    : `/${path}`;
+  const baseUrl = trimSlash(String(API_BASE_URL).trim());
+  const normalizedPath = String(path || "").replace(/^\/+/, "");
+  const fullUrl = new URL(normalizedPath, `${baseUrl}/`).toString();
 
-  const fullUrl = `${trimSlash(API_BASE_URL)}${normalizedPath}`;
-  console.log(`[buildApiUrl] ${path} -> ${fullUrl}`);
+  // JSON formatting keeps long hostnames intact in console viewers that
+  // otherwise turn part of the URL into a clickable link and wrap it oddly.
+  console.log(`[buildApiUrl] ${JSON.stringify(path)} -> ${JSON.stringify(fullUrl)}`);
   return fullUrl;
 };
 
