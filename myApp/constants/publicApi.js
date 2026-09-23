@@ -3,7 +3,7 @@ import * as Linking from "expo-linking";
 import * as WebBrowser from "expo-web-browser";
 
 const envBaseUrl = process.env.EXPO_PUBLIC_API_BASE_URL;
-const CLOUD_API_BASE_URL = "https://app-gereja-api.antonio-girsang.workers.dev";
+const CLOUD_API_BASE_URL = "https://app-gereja-api.edgarsimatupang3011.workers.dev/";
 
 export const API_BASE_URL =
   envBaseUrl ||
